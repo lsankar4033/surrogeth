@@ -1,6 +1,5 @@
 pragma solidity ^0.5.0;
 
-// TODO: docstrings
 contract Registry {
 
     uint256 public minBurn;
@@ -9,6 +8,7 @@ contract Registry {
         minBurn = _minBurn;
     }
 
+    // 'Reputation' maps
     mapping(address => uint256) public relayerToBurn;
     mapping(address => uint256) public relayerToRelayCount;
 
@@ -22,13 +22,22 @@ contract Registry {
         nextRelayer += 1;
     }
 
+    /**
+     * Calls an application contract and updates relayer reputation accordingly. msg.value is taken to be the
+     * 'burn' applied by this relayer
+     *
+     * @param _applicationContract The application contract to call
+     * @param _encodedPayload Payload to call _applicationContract with. Must be encoded as with
+     *                        abi.encodePacked to properly work with .call
+     */
     function relayCall(
         address _applicationContract,
-        bytes calldata _encodedCallData
+        bytes calldata _encodedPayload
     ) external payable {
         uint256 burnValue = msg.value;
         require(burnValue >= minBurn, "Registry: relayer must burn at least minBurn wei");
 
+        // Update all state about this relayer
         address relayer = msg.sender;
         if (relayerToRelayCount[relayer] == 0) {
             _addRelayer(relayer);
@@ -36,7 +45,7 @@ contract Registry {
         relayerToBurn[relayer] += burnValue;
         relayerToRelayCount[relayer] += 1;
 
-        (bool success,) = _applicationContract.call(_encodedCallData);
+        (bool success,) = _applicationContract.call(_encodedPayload);
         require(success, "Registry: failure calling application contract");
     }
 }
