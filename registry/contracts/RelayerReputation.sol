@@ -1,7 +1,6 @@
 pragma solidity ^0.5.0;
 
 contract RelayerReputation {
-
     event RelayerAdded(address indexed _relayer);
     event ReputationUpdated(address indexed _relayer, uint256 _burnValue);
 
