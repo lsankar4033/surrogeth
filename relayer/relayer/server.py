@@ -20,6 +20,8 @@ def fee(args):
     """
     return jsonify({ 'fee_wei': DEFAULT_FEE })
 
+# TODO: Add route for getting relayer's address
+
 SUBMIT_TX_ARGS = {
     'to': fields.String(required=True, validate=is_hex),
     'data': fields.String(required=True, validate=is_hex),
@@ -31,12 +33,5 @@ SUBMIT_TX_ARGS = {
 def submit_tx(args):
     """TODO: docstring
     """
-    # TODO: This method should take the place of 'mix'
-    pass
-
-@app.route('/mix', methods=['POST'])
-@use_args()
-def mix(args):
-    # TODO: the equivalent of WJ's code here:
-    # https://github.com/weijiekoh/mixer/blob/feat/relay-registry/backend/ts/routes/mix.ts
+    # TODO: make sure to change msg.value
     pass
