@@ -9,6 +9,7 @@
   "author": "lsankar4033",
   "license": "ISC",
   "dependencies": {
+    "dotenv": "8.0.0",
     "express": "4.17.1",
     "express-validator": "6.1.1",
     "ganache-core": "2.6.1",

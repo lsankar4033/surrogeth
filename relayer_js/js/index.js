@@ -1,17 +1,12 @@
 const express = require('express');
 const { check, validationResult } = require('express-validator');
 
-const ganache = require("ganache-core");
+const ganache = require('ganache-core');
 const Web3 = require('web3');
 
+const { RPC_URL, ADDRESS } = require('./config');
+
 // TODO: Better logging
-
-// TODO: Some type of switch on this. Also, allow geth node option
-const RPC_URL = 'https://kovan.infura.io/v3/85fe482e0db94cbeb9020e7173a481f7';
-
-// TODO: derive one from the other
-const PRIVATE_KEY = process.env.PRIVATE_KEY;
-const ADDRESS = process.env.ADDRESS;
 
 const app = express();
 
@@ -32,15 +27,17 @@ const createForkedWeb3 = (rpcUrl) => {
 /**
  * Simulate running a tx with the specified web3 instance and return the resulting web3 instance
  */
-const simulateTx = async (web3, to, data, value) {
+const simulateTx = async (web3, to, data, value) => {
+
+  console.log('hi');
 
   // TODO: Need to replace with sendSignedTransaction
-  web3.eth.sendTransaction({
-    from: ADDRESS,
-    to: to,
-    value: value,
-    data: data
-  });
+  //web3.eth.sendTransaction({
+    //from: ADDRESS,
+    //to: to,
+    //value: value,
+    //data: data
+  //});
 
 }
 
@@ -68,6 +65,9 @@ app.post('/submit_tx', [
 
   //console.log('Getting block num');
   //const blockNum = await web3.eth.getBlockNumber();
+
+
+  // NOTE: On actual tx submission make sure to lock on getting nonce
 
 });
 
