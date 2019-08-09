@@ -9,6 +9,8 @@
   "author": "lsankar4033",
   "license": "ISC",
   "dependencies": {
+    "express": "4.17.1",
+    "express-validator": "6.1.1",
     "ganache-core": "2.6.1",
     "web3": "1.2.1"
   }
