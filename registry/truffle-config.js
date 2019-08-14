@@ -5,5 +5,9 @@ module.exports = {
     solc: {
       version: "0.5.10"
     }
-  }
+  },
+
+  plugins: [
+    'truffle-watch'
+  ]
 }

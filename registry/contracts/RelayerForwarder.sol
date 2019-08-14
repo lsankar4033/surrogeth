@@ -1,15 +1,24 @@
-pragma solidity ^0.5.0;
+pragma solidity 0.5.10;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 import "./RelayerReputation.sol";
 
 contract RelayerForwarder is Ownable {
+    address payable constant burnAddress = address(0);
+
     uint256 public minBurn;
     RelayerReputation public reputation;
 
     constructor(uint256 _minBurn) public {
         minBurn = _minBurn;
+    }
+
+    /**
+     * Sends all balance accrued in this contract to the burn address (0x0).
+     */
+    function burnBalance() external {
+        burnAddress.transfer(address(this).balance);
     }
 
     /**
