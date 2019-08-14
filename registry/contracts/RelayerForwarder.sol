@@ -1,24 +1,47 @@
 pragma solidity 0.5.10;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 import "./RelayerReputation.sol";
 
 contract RelayerForwarder is Ownable {
+    using SafeMath for uint256;
+
     address payable constant burnAddress = address(0);
 
-    uint256 public minBurn;
+    Fraction public burnFraction; // NOTE: represents the fraction of fee used as burn
     RelayerReputation public reputation;
 
-    constructor(uint256 _minBurn) public {
-        minBurn = _minBurn;
+    struct Fraction {
+        uint256 numerator;
+        uint256 denominator;
+    }
+
+    constructor(uint256 _burnNum, uint256 _burnDenom) public {
+        require(_burnDenom >= _burnNum, "RelayerForwarder: Burn fraction denominator must be >= numerator");
+        burnFraction = Fraction(
+            _burnNum,
+            _burnDenom
+        );
+    }
+
+    function _computeBurn(uint256 feePlusBurn) internal view returns (uint256) {
+        return feePlusBurn.mul(burnFraction.numerator).div(burnFraction.denominator);
     }
 
     /**
-     * Sends all balance accrued in this contract to the burn address (0x0).
+     * Sets the fraction of fee that's burned.
+     *
+     * @param _burnNum The new numerator for burnFraction
+     * @param _burnDenom The new denominator for burnFraction
      */
-    function burnBalance() external {
-        burnAddress.transfer(address(this).balance);
+    function setBurnFraction(uint256 _burnNum, uint256 _burnDenom) external {
+        require(_burnDenom >= _burnNum, "RelayerForwarder: Burn fraction denominator must be >= numerator");
+        burnFraction = Fraction(
+            _burnNum,
+            _burnDenom
+        );
     }
 
     /**
@@ -31,8 +54,15 @@ contract RelayerForwarder is Ownable {
     }
 
     /**
-     * Calls an application contract and updates relayer reputation accordingly. msg.value is taken to be the
-     * 'burn' applied by this relayer
+     * Sends all balance accrued in this contract to the burn address (0x0).
+     */
+    function burnBalance() external {
+        burnAddress.transfer(address(this).balance);
+    }
+
+    /**
+     * Calls an application contract and updates relayer reputation accordingly. It's assumed that the
+     * application contract sends back any fees to this contract, from which burn is taken.
      *
      * @param _applicationContract The application contract to call
      * @param _encodedPayload Payload to call _applicationContract with. Must be encoded as with
@@ -41,16 +71,31 @@ contract RelayerForwarder is Ownable {
     function relayCall(
         address _applicationContract,
         bytes calldata _encodedPayload
-    ) external payable {
-        require(address(reputation) != address(0), "RelayerForwarder: reputation must be set to relay calls");
+    ) external {
+        require(address(reputation) != address(0), "RelayerForwarder: reputation contract must be set to relay calls");
 
-        uint256 burnValue = msg.value;
-        require(burnValue >= minBurn, "RelayerForwarder: relayer must burn at least minBurn wei");
+        address payable relayer = msg.sender;
 
-        address relayer = msg.sender;
-        reputation.updateReputation(relayer, burnValue);
-
+        // feePlusBurn calculated by the increase in balance of this contract
+        uint256 prevBalance = address(this).balance;
         (bool success,) = _applicationContract.call(_encodedPayload);
         require(success, "RelayerForwarder: failure calling application contract");
+        uint256 finalBalance = address(this).balance;
+
+        uint256 burn;
+        uint256 fee;
+        if (finalBalance > prevBalance) {
+            uint256 feePlusBurn = finalBalance.sub(prevBalance);
+            burn = feePlusBurn.mul(burnFraction.numerator).div(burnFraction.denominator);
+            fee = feePlusBurn.sub(burn);
+
+            relayer.transfer(fee);
+        } else {
+            // Set burn, fee to 0 explicitly if there was no fee. No need to send any fee to the relayer
+            burn = 0;
+            fee = 0;
+        }
+
+        reputation.updateReputation(relayer, burn);
     }
 }
