@@ -6,23 +6,22 @@ const RelayerForwarder = artifacts.require("RelayerForwarder");
 const TestApplication = artifacts.require("TestApplication");
 
 contract("RelayerForwarder", accounts => {
+  const nullAddress = "0x0000000000000000000000000000000000000000";
+  const minBurn = 10;
+
+  let forwarderContract;
+  let applicationContract;
+
+  let encodedPayload;
+
+  beforeEach(async () => {
+    forwarderContract = await RelayerForwarder.new(minBurn)
+
+    applicationContract = await TestApplication.new();
+    encodedPayload = await applicationContract.sampleEncodedPayload();
+  });
+
   describe("relayCall", () => {
-    const nullAddress = "0x0000000000000000000000000000000000000000";
-    const minBurn = 10;
-
-    let forwarderContract;
-    let applicationContract;
-
-    let encodedPayload;
-
-    beforeEach(async () => {
-      forwarderContract = await RelayerForwarder.new(minBurn)
-
-      applicationContract = await TestApplication.new();
-      encodedPayload = await applicationContract.sampleEncodedPayload();
-    });
-
-
     it("fails: reputation not set", async () => {
       await expectRevert(
         forwarderContract.relayCall(
@@ -67,6 +66,11 @@ contract("RelayerForwarder", accounts => {
           assert.equal(value.toNumber(), 5);
         });
 
+        it("stores burned Eth in the forwarder contract", async () => {
+          let forwarderBalance = await web3.eth.getBalance(forwarderContract.address);
+          assert.equal(forwarderBalance, minBurn + 1);
+        });
+
         // NOTE: This assumes that the reputation contract works as expected
         it("updates reputation with burn", async () => {
           let nextRelayer = await reputationContract.nextRelayer();
@@ -84,6 +88,30 @@ contract("RelayerForwarder", accounts => {
           assert.equal(count.toNumber(), 1);
         });
       });
+    });
+  });
+
+  describe("burn", () => {
+
+    it("sends all of the registry's balance to the burn address", async () => {
+      let reputationContract = await RelayerReputation.new(forwarderContract.address);
+      await forwarderContract.setReputation(reputationContract.address);
+
+      await forwarderContract.relayCall(
+        applicationContract.address,
+        encodedPayload,
+        { from: accounts[0], value: minBurn + 1 }
+      )
+
+      let initNullBalance = await web3.eth.getBalance(nullAddress);
+
+      await forwarderContract.burnBalance();
+      forwarderBalance = await web3.eth.getBalance(forwarderContract.address);
+      assert.equal(forwarderBalance, 0);
+
+      let finalNullBalance = await web3.eth.getBalance(nullAddress);
+
+      assert.isTrue(finalNullBalance > initNullBalance);
     });
   });
 });
