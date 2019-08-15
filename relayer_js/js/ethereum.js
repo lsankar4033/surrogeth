@@ -3,9 +3,6 @@ const Web3 = require('web3');
 const Accounts = require('web3-eth-accounts');
 const accounts = new Accounts();
 
-// TODO: How should this be defined?
-const DEFAULT_GAS_LIMIT = 100000
-
 /**
  * Create a forked version of web3 using the provided rpcUrl
  */
@@ -26,13 +23,19 @@ const signTx = async (web3, tx, privateKey) => {
   return result['rawTransaction'];
 }
 
-// NOTE: we don't have to lock on specifying nonce because this is assumed to be happening on a forked web3
-const buildSimTx = (to, data, value) => {
+/**
+ *  Build a transaction to be run on a forked web3 instance. Note that we don't need to lock on nonce
+ *  generation here as it's assumed that independent forked web3 instance are spun up for each transaction
+ *  simulation.
+ */
+const buildSimTx = async (forkedWeb3, to, data, value) => {
+  // NOTE: may be able to optimize performance by hardcoding gas limit, etc.
+  const block = await forkedWeb3.eth.getBlock('latest');
   return {
+    gas: block.gasLimit,
     to,
     data,
-    value,
-    gas: DEFAULT_GAS_LIMIT
+    value
   }
 }
 
@@ -42,18 +45,20 @@ const buildSimTx = (to, data, value) => {
 const simulateTx = async (forkedWeb3, to, data, value, privateKey) => {
   const address = accounts.privateKeyToAccount(privateKey).address;
 
-  const tx = buildSimTx(to, data, value)
+  const tx = await buildSimTx(forkedWeb3, to, data, value)
   const signedTx = await signTx(forkedWeb3, tx, privateKey)
 
   const initBalance = await forkedWeb3.eth.getBalance(address);
-  await forkedWeb3.eth.sendSignedTransaction(signedTx);
+  const txReceipt= await forkedWeb3.eth.sendSignedTransaction(signedTx);
   const finalBalance = await forkedWeb3.eth.getBalance(address);
 
-  return finalBalance - initBalance;
+  return {
+    balanceChange: finalBalance - initBalance,
+    txReceipt
+  }
 }
 
 module.exports = {
   createForkedWeb3,
-  signTx,
   simulateTx
 }
