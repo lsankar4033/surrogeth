@@ -74,13 +74,13 @@ contract RelayerForwarder is Ownable {
     ) external {
         require(address(reputation) != address(0), "RelayerForwarder: reputation contract must be set to relay calls");
 
-        address payable relayer = msg.sender;
-
         // feePlusBurn calculated by the increase in balance of this contract
         uint256 prevBalance = address(this).balance;
         (bool success,) = _applicationContract.call(_encodedPayload);
         require(success, "RelayerForwarder: failure calling application contract");
         uint256 finalBalance = address(this).balance;
+
+        address payable relayer = msg.sender;
 
         uint256 burn;
         uint256 fee;
@@ -98,4 +98,9 @@ contract RelayerForwarder is Ownable {
 
         reputation.updateReputation(relayer, burn);
     }
+
+    /**
+     * Enables sending Eth to this contract
+     */
+    function () external payable {}
 }

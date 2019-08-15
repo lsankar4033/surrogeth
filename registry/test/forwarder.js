@@ -7,18 +7,27 @@ const TestApplication = artifacts.require("TestApplication");
 
 contract("RelayerForwarder", accounts => {
   const nullAddress = "0x0000000000000000000000000000000000000000";
-  const minBurn = 10;
+
+  const burnNum = 10;
+  const burnDenom = 100;
+
+  const applicationFunding = 100;
+  const applicationFee = 10;
 
   let forwarderContract;
-  let applicationContract;
 
-  let encodedPayload;
+  let applicationContract;
+  let feePayload;
+  let noFeePayload;
 
   beforeEach(async () => {
-    forwarderContract = await RelayerForwarder.new(minBurn)
+    forwarderContract = await RelayerForwarder.new(burnNum, burnDenom);
 
-    applicationContract = await TestApplication.new();
-    encodedPayload = await applicationContract.sampleEncodedPayload();
+    applicationContract = await TestApplication.new(applicationFee);
+    applicationContract.send(applicationFunding, {from: accounts[0]}); // NOTE: Fund application contract
+
+    feePayload = await applicationContract.feePayload();
+    noFeePayload = await applicationContract.noFeePayload();
   });
 
   describe("relayCall", () => {
@@ -26,10 +35,10 @@ contract("RelayerForwarder", accounts => {
       await expectRevert(
         forwarderContract.relayCall(
           applicationContract.address,
-          encodedPayload,
-          { from: accounts[0], value: minBurn + 1 }
+          feePayload,
+          { from: accounts[0] }
         ),
-        "RelayerForwarder: reputation must be set to relay calls"
+        "RelayerForwarder: reputation contract must be set to relay calls"
       );
     });
 
@@ -41,23 +50,12 @@ contract("RelayerForwarder", accounts => {
         await forwarderContract.setReputation(reputationContract.address);
       });
 
-      it("fails: burn not high enough", async () => {
-        await expectRevert(
-          forwarderContract.relayCall(
-            applicationContract.address,
-            encodedPayload,
-            { from: accounts[0], value: minBurn - 1 }
-          ),
-          "RelayerForwarder: relayer must burn at least minBurn wei"
-        )
-      });
-
-      describe("with proper burn", () => {
+      describe("no fee", () => {
         beforeEach(async () => {
           await forwarderContract.relayCall(
             applicationContract.address,
-            encodedPayload,
-            { from: accounts[0], value: minBurn + 1 }
+            noFeePayload,
+            { from: accounts[0] }
           )
         });
 
@@ -66,13 +64,8 @@ contract("RelayerForwarder", accounts => {
           assert.equal(value.toNumber(), 5);
         });
 
-        it("stores burned Eth in the forwarder contract", async () => {
-          let forwarderBalance = await web3.eth.getBalance(forwarderContract.address);
-          assert.equal(forwarderBalance, minBurn + 1);
-        });
-
         // NOTE: This assumes that the reputation contract works as expected
-        it("updates reputation with burn", async () => {
+        it("updates reputation with 0 burn", async () => {
           let nextRelayer = await reputationContract.nextRelayer();
           assert.equal(nextRelayer.toNumber(), 2);
 
@@ -82,7 +75,40 @@ contract("RelayerForwarder", accounts => {
           assert.equal(secondRelayer, nullAddress);
 
           let burn = await reputationContract.relayerToBurn(accounts[0]);
-          assert.equal(burn.toNumber(), minBurn + 1);
+          assert.equal(burn.toNumber(), 0);
+
+          let count = await reputationContract.relayerToRelayCount(accounts[0]);
+          assert.equal(count.toNumber(), 1);
+        });
+      });
+
+      describe("with fee", () => {
+        let prevRelayerBalance;
+
+        beforeEach(async () => {
+          prevRelayerBalance = await web3.eth.getBalance(accounts[0]);
+          await forwarderContract.relayCall(
+            applicationContract.address,
+            feePayload,
+            { from: accounts[0] }
+          )
+        });
+
+        it("updates reputation appropriately and stores burned eth in forwarder", async () => {
+          let nextRelayer = await reputationContract.nextRelayer();
+          assert.equal(nextRelayer.toNumber(), 2);
+
+          let firstRelayer = await reputationContract.relayerList(1);
+          assert.equal(firstRelayer, accounts[0]);
+
+          let expectedBurn = (burnNum * applicationFee) / burnDenom;
+          let expectedFee = applicationFee - expectedBurn;
+
+          let burn = await reputationContract.relayerToBurn(accounts[0]);
+          assert.equal(burn.toNumber(), expectedBurn);
+
+          let forwarderBalance = await web3.eth.getBalance(forwarderContract.address);
+          assert.equal(forwarderBalance, expectedBurn);
 
           let count = await reputationContract.relayerToRelayCount(accounts[0]);
           assert.equal(count.toNumber(), 1);
@@ -99,8 +125,8 @@ contract("RelayerForwarder", accounts => {
 
       await forwarderContract.relayCall(
         applicationContract.address,
-        encodedPayload,
-        { from: accounts[0], value: minBurn + 1 }
+        feePayload,
+        { from: accounts[0] }
       )
 
       let initNullBalance = await web3.eth.getBalance(nullAddress);
@@ -111,6 +137,7 @@ contract("RelayerForwarder", accounts => {
 
       let finalNullBalance = await web3.eth.getBalance(nullAddress);
 
+      // NOTE: why can't we know this value *exactly*?
       assert.isTrue(finalNullBalance > initNullBalance);
     });
   });
