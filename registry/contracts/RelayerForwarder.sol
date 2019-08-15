@@ -61,6 +61,9 @@ contract RelayerForwarder is Ownable {
 
     /**
      * Sends all balance accrued in this contract to the burn address (0x0).
+     * Anyone can call this function.
+     * It is good to periodically drain the burnable balance from the contract
+     * so that we reduce harm in the event of a hack. 
      */
     function burnBalance() external {
         burnAddress.transfer(address(this).balance);
