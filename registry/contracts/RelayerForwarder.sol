@@ -1,3 +1,4 @@
+pragma experimental ABIEncoderV2;
 pragma solidity 0.5.10;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
@@ -29,6 +30,11 @@ contract RelayerForwarder is Ownable {
     function _computeBurn(uint256 feePlusBurn) internal view returns (uint256) {
         return feePlusBurn.mul(burnFraction.numerator).div(burnFraction.denominator);
     }
+
+    /**
+     * Enables sending Eth to this contract
+     */
+    function () external payable {}
 
     /**
      * Sets the fraction of fee that's burned.
@@ -100,7 +106,54 @@ contract RelayerForwarder is Ownable {
     }
 
     /**
-     * Enables sending Eth to this contract
+     * Calls multiple application contracts and updates relayer reputation accordingly.
+     *
+     * @param _applicationContracts The application contracts to call.
+     * @param _encodedPayloads Payloads to call each contract in _applicationContract with. Must be encoded as
+     *                         with abi.encodePacked.
      */
-    function () external payable {}
+    function batchRelayCall(
+        address[] calldata _applicationContracts,
+        bytes[] calldata _encodedPayloads
+    ) external {
+        require(address(reputation) != address(0), "RelayerForwarder: reputation contract must be set to relay calls");
+
+        require(
+            _applicationContracts.length == _encodedPayloads.length,
+            "RelayerForwarder: must send an equal number of application contracts and encoded payloads"
+        );
+
+        address payable relayer = msg.sender;
+        uint256 totalRelayerFee = 0;
+        // NOTE: Logic mirrors that of `relayCall`, but we avoid putting it into an internal method to save
+        // on gas from passing _encodedPayload in memory.
+        for (uint i = 0; i < _applicationContracts.length; i++) {
+            address applicationContract = _applicationContracts[i];
+
+            // feePlusBurn calculated by the increase in balance of this contract
+            uint256 prevBalance = address(this).balance;
+            (bool success,) = applicationContract.call(_encodedPayloads[i]);
+            require(success, "RelayerForwarder: failure calling application contract");
+            uint256 finalBalance = address(this).balance;
+
+            uint256 burn;
+            uint256 fee;
+            if (finalBalance > prevBalance) {
+                uint256 feePlusBurn = finalBalance.sub(prevBalance);
+                burn = feePlusBurn.mul(burnFraction.numerator).div(burnFraction.denominator);
+                fee = feePlusBurn.sub(burn);
+
+                totalRelayerFee += fee;
+            } else {
+                // Set burn, fee to 0 explicitly if there was no fee. No need to send any fee to the relayer
+                burn = 0;
+                fee = 0;
+            }
+
+            // NOTE: Could explore batch updating reputation in the future
+            reputation.updateReputation(relayer, burn);
+        }
+
+        relayer.transfer(totalRelayerFee);
+    }
 }

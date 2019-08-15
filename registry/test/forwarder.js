@@ -102,8 +102,6 @@ contract("RelayerForwarder", accounts => {
           assert.equal(firstRelayer, accounts[0]);
 
           let expectedBurn = (burnNum * applicationFee) / burnDenom;
-          let expectedFee = applicationFee - expectedBurn;
-
           let burn = await reputationContract.relayerToBurn(accounts[0]);
           assert.equal(burn.toNumber(), expectedBurn);
 
@@ -114,6 +112,42 @@ contract("RelayerForwarder", accounts => {
           assert.equal(count.toNumber(), 1);
         });
       });
+    });
+  });
+
+  describe("batchRelayCall", () => {
+
+    it("relays call to each specified application contract", async () => {
+      let reputationContract = await RelayerReputation.new(forwarderContract.address);
+      await forwarderContract.setReputation(reputationContract.address);
+
+      let applicationContract2 = await TestApplication.new(applicationFee);
+      applicationContract2.send(applicationFunding, {from: accounts[0]}); // NOTE: Fund application contract
+
+      // NOTE: fee on one, no fee on the other
+      await forwarderContract.batchRelayCall(
+        [applicationContract.address, applicationContract2.address],
+        [noFeePayload, feePayload],
+        { from: accounts[0] }
+      );
+
+      let value = await applicationContract.value();
+      assert.equal(value.toNumber(), 5);
+      let value2 = await applicationContract2.value();
+      assert.equal(value2.toNumber(), 5);
+
+      let firstRelayer = await reputationContract.relayerList(1);
+      assert.equal(firstRelayer, accounts[0]);
+
+      let count = await reputationContract.relayerToRelayCount(accounts[0]);
+      assert.equal(count.toNumber(), 2);
+
+      let expectedBurn = (burnNum * applicationFee) / burnDenom;
+      let burn = await reputationContract.relayerToBurn(accounts[0]);
+      assert.equal(burn.toNumber(), expectedBurn);
+
+      let forwarderBalance = await web3.eth.getBalance(forwarderContract.address);
+      assert.equal(forwarderBalance, expectedBurn);
     });
   });
 
