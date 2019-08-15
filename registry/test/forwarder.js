@@ -7,6 +7,7 @@ const TestApplication = artifacts.require("TestApplication");
 
 contract("RelayerForwarder", accounts => {
   const nullAddress = "0x0000000000000000000000000000000000000000";
+  const owner = accounts[0];
 
   const burnNum = 10;
   const burnDenom = 100;
@@ -21,7 +22,7 @@ contract("RelayerForwarder", accounts => {
   let noFeePayload;
 
   beforeEach(async () => {
-    forwarderContract = await RelayerForwarder.new(burnNum, burnDenom);
+    forwarderContract = await RelayerForwarder.new(burnNum, burnDenom, { from: owner });
 
     applicationContract = await TestApplication.new(applicationFee);
     applicationContract.send(applicationFunding, {from: accounts[0]}); // NOTE: Fund application contract
@@ -47,7 +48,7 @@ contract("RelayerForwarder", accounts => {
 
       beforeEach(async () => {
         reputationContract = await RelayerReputation.new(forwarderContract.address);
-        await forwarderContract.setReputation(reputationContract.address);
+        await forwarderContract.setReputation(reputationContract.address, { from: owner });
       });
 
       describe("no fee", () => {
@@ -119,7 +120,7 @@ contract("RelayerForwarder", accounts => {
 
     it("relays call to each specified application contract", async () => {
       let reputationContract = await RelayerReputation.new(forwarderContract.address);
-      await forwarderContract.setReputation(reputationContract.address);
+      await forwarderContract.setReputation(reputationContract.address, { from: owner });
 
       let applicationContract2 = await TestApplication.new(applicationFee);
       applicationContract2.send(applicationFunding, {from: accounts[0]}); // NOTE: Fund application contract
@@ -155,7 +156,7 @@ contract("RelayerForwarder", accounts => {
 
     it("sends all of the registry's balance to the burn address", async () => {
       let reputationContract = await RelayerReputation.new(forwarderContract.address);
-      await forwarderContract.setReputation(reputationContract.address);
+      await forwarderContract.setReputation(reputationContract.address, { from: owner });
 
       await forwarderContract.relayCall(
         applicationContract.address,

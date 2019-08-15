@@ -42,7 +42,7 @@ contract RelayerForwarder is Ownable {
      * @param _burnNum The new numerator for burnFraction
      * @param _burnDenom The new denominator for burnFraction
      */
-    function setBurnFraction(uint256 _burnNum, uint256 _burnDenom) external {
+    function setBurnFraction(uint256 _burnNum, uint256 _burnDenom) external onlyOwner {
         require(_burnDenom >= _burnNum, "RelayerForwarder: Burn fraction denominator must be >= numerator");
         burnFraction = Fraction(
             _burnNum,
@@ -55,7 +55,7 @@ contract RelayerForwarder is Ownable {
      *
      * @param _reputationAddress The address of the reputation contract to set.
      */
-    function setReputation(address _reputationAddress) external {
+    function setReputation(address _reputationAddress) external onlyOwner {
         reputation = RelayerReputation(_reputationAddress);
     }
 
