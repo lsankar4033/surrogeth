@@ -80,6 +80,8 @@ contract RelayerForwarder is Ownable {
     ) external {
         require(address(reputation) != address(0), "RelayerForwarder: reputation contract must be set to relay calls");
 
+        require(tx.origin == msg.sender, "RelayerForwarder: cannot relay calls from another contract");
+
         // feePlusBurn calculated by the increase in balance of this contract
         uint256 prevBalance = address(this).balance;
         (bool success,) = _applicationContract.call(_encodedPayload);
@@ -117,6 +119,8 @@ contract RelayerForwarder is Ownable {
         bytes[] calldata _encodedPayloads
     ) external {
         require(address(reputation) != address(0), "RelayerForwarder: reputation contract must be set to relay calls");
+
+        require(tx.origin == msg.sender, "RelayerForwarder: cannot relay calls from another contract");
 
         require(
             _applicationContracts.length == _encodedPayloads.length,
