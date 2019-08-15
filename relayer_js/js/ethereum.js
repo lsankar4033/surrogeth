@@ -1,8 +1,10 @@
 const ganache = require("ganache-core");
 const Web3 = require('web3');
+const Accounts = require('web3-eth-accounts');
+const accounts = new Accounts();
 
-// NOTE: We could remove this require in favor of passing these into fn calls, but this makes testing easier
-const { PRIVATE_KEY, ADDRESS, DEFAULT_GAS_LIMIT } = require('./config');
+// TODO: How should this be defined?
+const DEFAULT_GAS_LIMIT = 100000
 
 /**
  * Create a forked version of web3 using the provided rpcUrl
@@ -35,16 +37,17 @@ const buildSimTx = (to, data, value) => {
 }
 
 /**
- * Simulate running a tx with the specified web3 instance and return the resulting web3 instance. Returns the
- * change in balance to ADDRESS.
+ * Simulate running a tx with the specified web3 instance and return the resulting web3 instance.
  */
-const simulateTx = async (forkedWeb3, to, data, value) => {
-  const tx = buildSimTx(to, data, value)
-  const signedTx = signTx(forkedWeb3, tx, PRIVATE_KEY)
+const simulateTx = async (forkedWeb3, to, data, value, privateKey) => {
+  const address = accounts.privateKeyToAccount(privateKey).address;
 
-  const initBalance = await forkedWeb3.eth.getBalance(ADDRESS);
+  const tx = buildSimTx(to, data, value)
+  const signedTx = await signTx(forkedWeb3, tx, privateKey)
+
+  const initBalance = await forkedWeb3.eth.getBalance(address);
   await forkedWeb3.eth.sendSignedTransaction(signedTx);
-  const finalBalance = await forkedWeb3.eth.getBalance(ADDRESS);
+  const finalBalance = await forkedWeb3.eth.getBalance(address);
 
   return finalBalance - initBalance;
 }

@@ -3,15 +3,14 @@ const { check, validationResult } = require('express-validator');
 
 const ganache = require('ganache-core');
 const Web3 = require('web3');
+const Accounts = require('web3-eth-accounts');
+const accounts = new Accounts();
 
-const { RPC_URL, ADDRESS } = require('./config');
+const { RPC_URL, PRIVATE_KEY } = require('./config');
+const ADDRESS = accounts.privateKeyToAccount(PRIVATE_KEY).address
 
 // TODO: Better logging
-
 const app = express();
-
-// NOTE: we currently create new web3 objects on every call. Maybe we should share them? Then we need to
-// do nonce locking properly.
 
 /**
  * Create a forked version of web3 using the provided rpcUrl
@@ -30,14 +29,6 @@ const createForkedWeb3 = (rpcUrl) => {
 const simulateTx = async (web3, to, data, value) => {
 
   console.log('hi');
-
-  // TODO: Need to replace with sendSignedTransaction
-  //web3.eth.sendTransaction({
-    //from: ADDRESS,
-    //to: to,
-    //value: value,
-    //data: data
-  //});
 
 }
 
@@ -68,7 +59,6 @@ app.post('/submit_tx', [
 
 
   // NOTE: On actual tx submission make sure to lock on getting nonce
-
 });
 
 // TODO routes:
