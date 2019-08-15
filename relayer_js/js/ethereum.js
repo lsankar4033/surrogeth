@@ -53,7 +53,6 @@ const simulateTx = async (forkedWeb3, to, data, value, privateKey) => {
 }
 
 module.exports = {
-  buildSimTx, // TODO: Remove from export
   createForkedWeb3,
   signTx,
   simulateTx

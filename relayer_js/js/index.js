@@ -6,7 +6,7 @@ const Web3 = require('web3');
 const Accounts = require('web3-eth-accounts');
 const accounts = new Accounts();
 
-const { RPC_URL, PRIVATE_KEY } = require('./config');
+const { KOVAN_RPC_URL, PRIVATE_KEY } = require('./config');
 const ADDRESS = accounts.privateKeyToAccount(PRIVATE_KEY).address
 
 // TODO: Better logging
@@ -50,7 +50,7 @@ app.post('/submit_tx', [
   const { to, data, value } = req.query;
 
   console.log('Initializing forked ganache');
-  const forkedWeb3 = createForkedWeb3(RPC_URL);
+  const forkedWeb3 = createForkedWeb3(KOVAN_RPC_URL);
 
   res.json('ok');
 
