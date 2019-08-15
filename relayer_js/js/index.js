@@ -6,6 +6,7 @@ const Web3 = require('web3');
 const Accounts = require('web3-eth-accounts');
 const accounts = new Accounts();
 
+const { isHexStr, isAddressStr } = require('./utils');
 const { createForkedWeb3, simulateTx } = require('./ethereum');
 const { KOVAN_RPC_URL, PRIVATE_KEY, MIN_TX_PROFIT } = require('./config');
 const ADDRESS = accounts.privateKeyToAccount(PRIVATE_KEY).address
@@ -18,8 +19,8 @@ app.get('/address', (req, res) => {
 });
 
 app.get('/fee', [
-  check('to').isHexadecimal(),
-  check('data').isHexadecimal(),
+  check('to').custom(isAddressStr),
+  check('data').custom(isHexStr),
   check('value').isInt()
 ], async (req, res) => {
   const errors = validationResult(req);
@@ -43,8 +44,8 @@ app.get('/fee', [
 });
 
 app.post('/submit_tx', [
-  check('to').isHexadecimal(),
-  check('data').isHexadecimal(),
+  check('to').custom(isAddressStr),
+  check('data').custom(isHexStr),
   check('value').isInt()
 ], async (req, res) => {
   const errors = validationResult(req);
@@ -55,14 +56,13 @@ app.post('/submit_tx', [
   // TODO: why doesn't request body work with express-validator
   const { to, data, value } = req.query;
 
-  console.log('Initializing forked ganache');
   const forkedWeb3 = createForkedWeb3(KOVAN_RPC_URL);
+  const { balanceChange, txReceipt } = await simulateTx(forkedWeb3, to, data, value);
+
+  // if balanceChange warrants the amortized cost of sending (i.e. monitoring mempool), send it
+  // else respond with error
 
   res.json('ok');
-
-  //console.log('Getting block num');
-  //const blockNum = await web3.eth.getBlockNumber();
-
 
   // NOTE: On actual tx submission make sure to lock on getting nonce
 });
