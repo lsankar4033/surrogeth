@@ -2,7 +2,7 @@ const express = require('express');
 const { check, validationResult } = require('express-validator');
 
 const ganache = require('ganache-core');
-const Web3 = require('web3');
+const ethers = require('ethers');
 const Accounts = require('web3-eth-accounts');
 const accounts = new Accounts();
 
@@ -12,7 +12,7 @@ const { KOVAN_RPC_URL, PRIVATE_KEY, MIN_TX_PROFIT } = require('./config');
 const ADDRESS = accounts.privateKeyToAccount(PRIVATE_KEY).address
 
 const app = express();
-const web3 = new Web3(KOVAN_RPC_URL);
+const provider = new ethers.providers.JsonRpcProvider(KOVAN_RPC_URL);
 
 app.get('/address', (req, res) => {
   res.json({ address: ADDRESS });
@@ -30,16 +30,16 @@ app.get('/fee', [
 
   const { to, data, value } = req.query;
 
-  const gasPrice = parseInt(await web3.eth.getGasPrice());
-  const gasEstimate = await web3.eth.estimateGas({
+  const gasPrice = await provider.getGasPrice();
+  const gasEstimate = await provider.estimateGas({
     to,
     data,
     value,
     from: ADDRESS
   });
 
-  const cost = gasPrice * gasEstimate;
-
+  // NOTE: May want to change to return a BigNumber
+  const cost = gasPrice.toNumber() * gasEstimate.toNumber();
   res.json({ fee: cost + MIN_TX_PROFIT });
 });
 
