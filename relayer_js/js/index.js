@@ -59,16 +59,21 @@ app.post('/submit_tx', [
   const forkedWeb3 = createForkedWeb3(KOVAN_RPC_URL);
   const { balanceChange, txReceipt } = await simulateTx(forkedWeb3, to, data, value);
 
-  // if balanceChange warrants the amortized cost of sending (i.e. monitoring mempool), send it
-  // else respond with error
+  if (balanceChange <= MIN_TX_PROFIT) {
+    res.status(403).json({ msg: 'Fee too low' })
+  }
+
+  // TODO: Determine how to do locking so that nonce collision doesn't happen
+  // TODO: await lock
+
+  // 1. get transaction count for nonce
+  // 2. sign full transaction
+  // 3. send signed transaction
+
+  // TODO: unlock
 
   res.json('ok');
-
-  // NOTE: On actual tx submission make sure to lock on getting nonce
 });
-
-// TODO routes:
-// - fee
 
 // TODO: Pull port from env
 app.listen(3000);
