@@ -20,7 +20,7 @@ contract RelayerForwarder is Ownable {
     }
 
     constructor(uint256 _burnNum, uint256 _burnDenom) public {
-        require(_burnDenom >= _burnNum, "RelayerForwarder: Burn fraction denominator must be >= numerator");
+        require(_burnDenom >= _burnNum, "RelayerForwarder: burn fraction denominator must be >= numerator");
         burnFraction = Fraction(
             _burnNum,
             _burnDenom
@@ -32,7 +32,7 @@ contract RelayerForwarder is Ownable {
     }
 
     /**
-     * Enables sending Eth to this contract
+     * Enables sending Ether to this contract
      */
     function () external payable {}
 
@@ -43,7 +43,7 @@ contract RelayerForwarder is Ownable {
      * @param _burnDenom The new denominator for burnFraction
      */
     function setBurnFraction(uint256 _burnNum, uint256 _burnDenom) external onlyOwner {
-        require(_burnDenom >= _burnNum, "RelayerForwarder: Burn fraction denominator must be >= numerator");
+        require(_burnDenom >= _burnNum, "RelayerForwarder: burn fraction denominator must be >= numerator");
         burnFraction = Fraction(
             _burnNum,
             _burnDenom
@@ -63,7 +63,7 @@ contract RelayerForwarder is Ownable {
      * Sends all balance accrued in this contract to the burn address (0x0).
      * Anyone can call this function.
      * It is good to periodically drain the burnable balance from the contract
-     * so that we reduce harm in the event of a hack. 
+     * so that we reduce harm in the event of a hack.
      */
     function burnBalance() external {
         burnAddress.transfer(address(this).balance);
@@ -94,17 +94,15 @@ contract RelayerForwarder is Ownable {
         address payable relayer = msg.sender;
 
         uint256 burn;
-        uint256 fee;
         if (finalBalance > prevBalance) {
             uint256 feePlusBurn = finalBalance.sub(prevBalance);
-            burn = feePlusBurn.mul(burnFraction.numerator).div(burnFraction.denominator);
-            fee = feePlusBurn.sub(burn);
+            burn = _computeBurn(feePlusBurn);
+            uint256 fee = feePlusBurn.sub(burn);
 
             relayer.transfer(fee);
         } else {
             // Set burn, fee to 0 explicitly if there was no fee. No need to send any fee to the relayer
             burn = 0;
-            fee = 0;
         }
 
         reputation.updateReputation(relayer, burn);
@@ -144,17 +142,15 @@ contract RelayerForwarder is Ownable {
             uint256 finalBalance = address(this).balance;
 
             uint256 burn;
-            uint256 fee;
             if (finalBalance > prevBalance) {
                 uint256 feePlusBurn = finalBalance.sub(prevBalance);
                 burn = feePlusBurn.mul(burnFraction.numerator).div(burnFraction.denominator);
-                fee = feePlusBurn.sub(burn);
+                uint256 fee = feePlusBurn.sub(burn);
 
                 totalRelayerFee += fee;
             } else {
                 // Set burn, fee to 0 explicitly if there was no fee. No need to send any fee to the relayer
                 burn = 0;
-                fee = 0;
             }
 
             // NOTE: Could explore batch updating reputation in the future
