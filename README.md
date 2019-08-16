@@ -5,6 +5,8 @@ transaction abstraction, but are initially being developed for [micromix](https:
 
 ## TODO
 - dockerize!
+- validation of env vars + defaults
+- standardize http error messages
 - logging solution that collects nested exceptions nicely
 - info logging
 - TODO audit
