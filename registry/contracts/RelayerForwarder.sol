@@ -144,7 +144,7 @@ contract RelayerForwarder is Ownable {
             uint256 burn;
             if (finalBalance > prevBalance) {
                 uint256 feePlusBurn = finalBalance.sub(prevBalance);
-                burn = feePlusBurn.mul(burnFraction.numerator).div(burnFraction.denominator);
+                burn = _computeBurn(feePlusBurn);
                 uint256 fee = feePlusBurn.sub(burn);
 
                 totalRelayerFee += fee;
