@@ -8,7 +8,7 @@ const accounts = new Accounts();
 
 const { isHexStr, isAddressStr } = require('./utils');
 const { createForkedWeb3, simulateTx } = require('./ethereum');
-const { KOVAN_RPC_URL, PRIVATE_KEY, MIN_TX_PROFIT, GAS_PRICE } = require('./config');
+const { KOVAN_RPC_URL, PRIVATE_KEY, MIN_TX_PROFIT, GAS_PRICE, PORT } = require('./config');
 const ADDRESS = accounts.privateKeyToAccount(PRIVATE_KEY).address
 
 const app = express();
@@ -77,7 +77,7 @@ app.post('/submit_tx', [
   // TODO: lock on get+submit
   const nonce = await providers.getTransactionCount(ADDRESS, 'pending');
   const gasLimit = await getGasLimit();
-  const tx = {
+  const unsignedTx = {
     to,
     value,
     data,
@@ -86,8 +86,7 @@ app.post('/submit_tx', [
     gasPrice: GAS_PRICE,
   }
 
-  const signedTx = await signer.sign(tx);
-
+  const signedTx = await signer.sign(unsignedTx);
   const tx = provider.sendTransaction(signedTx);
 
   // TODO: tx.catch hook. i.e. re-submit to network
@@ -98,5 +97,4 @@ app.post('/submit_tx', [
   });
 });
 
-// TODO: Pull port from env
-app.listen(3000);
+app.listen(PORT);
