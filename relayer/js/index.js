@@ -8,11 +8,22 @@ const accounts = new Accounts();
 
 const { isHexStr, isAddressStr } = require('./utils');
 const { createForkedWeb3, simulateTx } = require('./ethereum');
-const { KOVAN_RPC_URL, PRIVATE_KEY, MIN_TX_PROFIT } = require('./config');
+const { KOVAN_RPC_URL, PRIVATE_KEY, MIN_TX_PROFIT, GAS_PRICE } = require('./config');
 const ADDRESS = accounts.privateKeyToAccount(PRIVATE_KEY).address
 
 const app = express();
 const provider = new ethers.providers.JsonRpcProvider(KOVAN_RPC_URL);
+const signer = new ethers.Wallet(PRIVATE_KEY, provider);
+
+/**
+ * Used in determining the gas limit for submitted txes. Currently just gets the last block's gas limit.
+ */
+const getGasLimit = async () => {
+  const blockNum = await provider.getBlockNumber();
+  const block = await provider.getBlock(blockNum);
+
+  return block.gasLimit;
+}
 
 app.get('/address', (req, res) => {
   res.json({ address: ADDRESS });
@@ -63,16 +74,28 @@ app.post('/submit_tx', [
     res.status(403).json({ msg: 'Fee too low' })
   }
 
-  // TODO: Determine how to do locking so that nonce collision doesn't happen
-  // TODO: await lock
+  // TODO: lock on get+submit
+  const nonce = await providers.getTransactionCount(ADDRESS, 'pending');
+  const gasLimit = await getGasLimit();
+  const tx = {
+    to,
+    value,
+    data,
+    nonce,
+    gasLimit,
+    gasPrice: GAS_PRICE,
+  }
 
-  // 1. get transaction count for nonce
-  // 2. sign full transaction
-  // 3. send signed transaction
+  const signedTx = await signer.sign(tx);
 
-  // TODO: unlock
+  const tx = provider.sendTransaction(signedTx);
 
-  res.json('ok');
+  // TODO: tx.catch hook. i.e. re-submit to network
+
+  res.json({
+    block: tx.blockNumber,
+    txHash: tx.hash
+  });
 });
 
 // TODO: Pull port from env
