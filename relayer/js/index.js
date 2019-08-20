@@ -9,7 +9,7 @@ const Accounts = require('web3-eth-accounts');
 
 const { isHexStr, isAddressStr } = require('./utils');
 const { createForkedWeb3, simulateTx } = require('./ethereum');
-const { KOVAN_RPC_URL, PRIVATE_KEY, MIN_TX_PROFIT, GAS_PRICE, PORT } = require('./config');
+const { KOVAN_RPC_URL, PRIVATE_KEY, MIN_TX_PROFIT, GAS_PRICE } = require('./config');
 
 const accounts = new Accounts();
 const address = accounts.privateKeyToAccount(PRIVATE_KEY).address
@@ -80,7 +80,7 @@ app.post('/submit_tx', [
     res.status(403).json({ msg: 'Fee too low' })
   }
 
-  lock.acquire(nonceKey, () => {
+  lock.acquire(nonceKey, async () => {
     const nonce = await providers.getTransactionCount(address, 'pending');
     const gasLimit = await getGasLimit();
     const unsignedTx = {
@@ -104,4 +104,4 @@ app.post('/submit_tx', [
   });
 });
 
-app.listen(PORT);
+app.listen(8080);
