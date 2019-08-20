@@ -5,9 +5,7 @@ transaction abstraction, but are initially being developed for [micromix](https:
 
 ## TODO
 - dockerize!
-- validation of env vars + defaults
+- unit tests
 - standardize http error messages
-- option for a geth node? + benchmark tx simulation against a geth node
 - logging solution that collects nested exceptions nicely
-- info logging
 - TODO audit
