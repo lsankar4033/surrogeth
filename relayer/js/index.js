@@ -1,17 +1,24 @@
 const express = require('express');
 const { check, validationResult } = require('express-validator');
 
+const AsyncLock = require('async-lock');
+
 const ganache = require('ganache-core');
 const ethers = require('ethers');
 const Accounts = require('web3-eth-accounts');
-const accounts = new Accounts();
 
 const { isHexStr, isAddressStr } = require('./utils');
 const { createForkedWeb3, simulateTx } = require('./ethereum');
 const { KOVAN_RPC_URL, PRIVATE_KEY, MIN_TX_PROFIT, GAS_PRICE, PORT } = require('./config');
-const ADDRESS = accounts.privateKeyToAccount(PRIVATE_KEY).address
+
+const accounts = new Accounts();
+const address = accounts.privateKeyToAccount(PRIVATE_KEY).address
+
+const lock = new AsyncLock();
+const nonceKey = `nonce_${address}`;
 
 const app = express();
+
 const provider = new ethers.providers.JsonRpcProvider(KOVAN_RPC_URL);
 const signer = new ethers.Wallet(PRIVATE_KEY, provider);
 
@@ -26,7 +33,7 @@ const getGasLimit = async () => {
 }
 
 app.get('/address', (req, res) => {
-  res.json({ address: ADDRESS });
+  res.json({ address: address });
 });
 
 app.get('/fee', [
@@ -46,7 +53,7 @@ app.get('/fee', [
     to,
     data,
     value,
-    from: ADDRESS
+    from: address
   });
 
   // NOTE: May want to change to return a BigNumber
@@ -64,7 +71,6 @@ app.post('/submit_tx', [
     res.status(422).json({ errors: errors.array() });
   }
 
-  // TODO: why doesn't request body work with express-validator
   const { to, data, value } = req.query;
 
   const forkedWeb3 = createForkedWeb3(KOVAN_RPC_URL);
@@ -74,26 +80,27 @@ app.post('/submit_tx', [
     res.status(403).json({ msg: 'Fee too low' })
   }
 
-  // TODO: lock on get+submit
-  const nonce = await providers.getTransactionCount(ADDRESS, 'pending');
-  const gasLimit = await getGasLimit();
-  const unsignedTx = {
-    to,
-    value,
-    data,
-    nonce,
-    gasLimit,
-    gasPrice: GAS_PRICE,
-  }
+  lock.acquire(nonceKey, () => {
+    const nonce = await providers.getTransactionCount(address, 'pending');
+    const gasLimit = await getGasLimit();
+    const unsignedTx = {
+      to,
+      value,
+      data,
+      nonce,
+      gasLimit,
+      gasPrice: GAS_PRICE,
+    }
 
-  const signedTx = await signer.sign(unsignedTx);
-  const tx = provider.sendTransaction(signedTx);
+    const signedTx = await signer.sign(unsignedTx);
 
-  // TODO: tx.catch hook. i.e. re-submit to network
-
-  res.json({
-    block: tx.blockNumber,
-    txHash: tx.hash
+    // Returns Promise<TransactionResponse>
+    return provider.sendTransaction(signedTx);
+  }).then( (txResponse) => {
+    res.json({
+      block: txResponse.blockNumber,
+      txHash: txResponse.hash
+    });
   });
 });
 
