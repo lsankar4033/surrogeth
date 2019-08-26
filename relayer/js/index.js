@@ -9,10 +9,10 @@ const Accounts = require('web3-eth-accounts');
 
 const { isHexStr, isAddressStr } = require('./utils');
 const { createForkedWeb3, simulateTx } = require('./ethereum');
-const { KOVAN_RPC_URL, PRIVATE_KEY, MIN_TX_PROFIT, GAS_PRICE } = require('./config');
+const { KOVAN_RPC_URL, RELAYER_PRIVATE_KEY, RELAYER_MIN_TX_PROFIT, RELAYER_GAS_PRICE } = require('./config');
 
 const accounts = new Accounts();
-const address = accounts.privateKeyToAccount(PRIVATE_KEY).address
+const address = accounts.privateKeyToAccount(RELAYER_PRIVATE_KEY).address
 
 const lock = new AsyncLock();
 const nonceKey = `nonce_${address}`;
@@ -20,7 +20,7 @@ const nonceKey = `nonce_${address}`;
 const app = express();
 
 const provider = new ethers.providers.JsonRpcProvider(KOVAN_RPC_URL);
-const signer = new ethers.Wallet(PRIVATE_KEY, provider);
+const signer = new ethers.Wallet(RELAYER_PRIVATE_KEY, provider);
 
 /**
  * Used in determining the gas limit for submitted txes. Currently just gets the last block's gas limit.
@@ -58,7 +58,7 @@ app.get('/fee', [
 
   // NOTE: May want to change to return a BigNumber
   const cost = gasPrice.toNumber() * gasEstimate.toNumber();
-  res.json({ fee: cost + MIN_TX_PROFIT });
+  res.json({ fee: cost + RELAYER_MIN_TX_PROFIT });
 });
 
 app.post('/submit_tx', [
@@ -76,7 +76,7 @@ app.post('/submit_tx', [
   const forkedWeb3 = createForkedWeb3(KOVAN_RPC_URL);
   const { balanceChange, txReceipt } = await simulateTx(forkedWeb3, to, data, value);
 
-  if (balanceChange <= MIN_TX_PROFIT) {
+  if (balanceChange <= RELAYER_MIN_TX_PROFIT) {
     res.status(403).json({ msg: 'Fee too low' })
   }
 
@@ -89,7 +89,7 @@ app.post('/submit_tx', [
       data,
       nonce,
       gasLimit,
-      gasPrice: GAS_PRICE,
+      gasPrice: RELAYER_GAS_PRICE,
     }
 
     const signedTx = await signer.sign(unsignedTx);

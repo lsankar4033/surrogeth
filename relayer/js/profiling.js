@@ -3,7 +3,7 @@
  */
 
 const { createForkedWeb3, simulateTx } = require('./ethereum');
-const { PRIVATE_KEY } = require('./config');
+const { RELAYER_PRIVATE_KEY } = require('./config');
 
 const timeSimulateTx = async (rpcUrl) => {
   const forkedWeb3 = createForkedWeb3(rpcUrl);
@@ -12,7 +12,7 @@ const timeSimulateTx = async (rpcUrl) => {
   const value = 10;
 
   let start = new Date()
-  let res = await simulateTx(forkedWeb3, toAddress, data, value, PRIVATE_KEY);
+  let res = await simulateTx(forkedWeb3, toAddress, data, value, RELAYER_PRIVATE_KEY);
   let executionTime = new Date() - start;
 
   console.info('Execution time: %dms', executionTime)
