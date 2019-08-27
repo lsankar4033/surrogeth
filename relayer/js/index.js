@@ -7,9 +7,12 @@ const ganache = require('ganache-core');
 const ethers = require('ethers');
 const Accounts = require('web3-eth-accounts');
 
-const { isHexStr, isAddressStr } = require('./utils');
+const { isHexStr, isAddressStr, isNetworkStr } = require('./utils');
 const { createForkedWeb3, simulateTx } = require('./ethereum');
-const { KOVAN_RPC_URL, RELAYER_PRIVATE_KEY, RELAYER_MIN_TX_PROFIT, RELAYER_GAS_PRICE } = require('./config');
+const {
+  KOVAN_RPC_URL, MAINNET_RPC_URL,
+  RELAYER_PRIVATE_KEY, RELAYER_MIN_TX_PROFIT, RELAYER_GAS_PRICE
+} = require('./config');
 
 const accounts = new Accounts();
 const address = accounts.privateKeyToAccount(RELAYER_PRIVATE_KEY).address
@@ -19,13 +22,24 @@ const nonceKey = `nonce_${address}`;
 
 const app = express();
 
-const provider = new ethers.providers.JsonRpcProvider(KOVAN_RPC_URL);
-const signer = new ethers.Wallet(RELAYER_PRIVATE_KEY, provider);
+const networkToRpcUrl = {
+  KOVAN: KOVAN_RPC_URL,
+  MAINNET: MAINNET_RPC_URL
+};
+const networkToProvider = {
+  KOVAN: new ethers.providers.JsonRpcProvider(networkToRpcUrl['KOVAN']),
+  MAINNET: new ethers.providers.JsonRpcProvider(networkToRpcUrl['MAINNET'])
+};
+const networkToSigner = {
+  KOVAN: new ethers.Wallet(RELAYER_PRIVATE_KEY, networkToProvider['KOVAN']),
+  MAINNET: new ethers.Wallet(RELAYER_PRIVATE_KEY, networkToProvider['MAINNET'])
+};
 
 /**
  * Used in determining the gas limit for submitted txes. Currently just gets the last block's gas limit.
  */
-const getGasLimit = async () => {
+const getGasLimit = async (network) => {
+  const provider = networkToProvider[network]
   const blockNum = await provider.getBlockNumber();
   const block = await provider.getBlock(blockNum);
 
@@ -39,14 +53,16 @@ app.get('/address', (req, res) => {
 app.get('/fee', [
   check('to').custom(isAddressStr),
   check('data').custom(isHexStr),
-  check('value').isInt()
+  check('value').isInt(),
+  check('network').custom(isNetworkStr)
 ], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     res.status(422).json({ errors: errors.array() });
   }
 
-  const { to, data, value } = req.query;
+  const { to, data, value, network } = req.query;
+  const provider = networkToProvider[network];
 
   const gasPrice = await provider.getGasPrice();
   const gasEstimate = await provider.estimateGas({
@@ -64,16 +80,20 @@ app.get('/fee', [
 app.post('/submit_tx', [
   check('to').custom(isAddressStr),
   check('data').custom(isHexStr),
-  check('value').isInt()
+  check('value').isInt(),
+  check('network').custom(isNetworkStr)
 ], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     res.status(422).json({ errors: errors.array() });
   }
 
-  const { to, data, value } = req.query;
+  const { to, data, value, network } = req.query;
+  const rpcUrl = networkToRpcUrl[network];
+  const provider = networkToProvider[network];
+  const signer = networkToSigner[network];
 
-  const forkedWeb3 = createForkedWeb3(KOVAN_RPC_URL);
+  const forkedWeb3 = createForkedWeb3(rpcUrl);
   const { balanceChange, txReceipt } = await simulateTx(forkedWeb3, to, data, value);
 
   if (balanceChange <= RELAYER_MIN_TX_PROFIT) {
