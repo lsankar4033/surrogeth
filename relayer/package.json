@@ -17,5 +17,8 @@
     "express-validator": "6.1.1",
     "ganache-core": "2.6.1",
     "web3": "1.2.1"
+  },
+  "devDependencies": {
+    "husky": "3.0.4"
   }
 }
