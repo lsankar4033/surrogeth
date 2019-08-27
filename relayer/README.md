@@ -40,6 +40,8 @@ Descriptions:
 **RELAYER\_MIN\_TX\_PROFIT** - The minimum profit in Wei that this relayer must get from a transaction to actually relay it. If a transaction is submitted to this relayer that nets the relayer less profit than this value, the relayer will reject it.
 
 ### Deployment
+First, make sure you've set up a proper `.env` file.
+
 The relayer is deployed as a single Docker container. To start, check out the [Docker docs](https://docs.docker.com) and install Docker.
 
 Once Docker's been installed, `cd` to `relayer` wherever you've cloned this repository and build the Dockerfile:
@@ -56,11 +58,15 @@ Now, run the container by its container ID, specifying the previously created en
 $ docker run --env-file .env -p $YOUR_PORT_HERE:8080 $YOUR_CONTAINER_ID_HERE
 ```
 
-To check that the service is running as expected, 
+To check that the service is running as expected, try hitting it:
+
+```
+$ curl localhost:$YOUR_PORT_HERE/address
+{"address":"0x.........."}
+``` 
 
 ### Development
 TODO
-
 
 ### Testing
 TODO
