@@ -9,4 +9,4 @@ RUN npm install
 COPY . .
 
 EXPOSE 8080
-CMD [ "node", "js/index.js" ]
+CMD [ "node", "js/server.js" ]
