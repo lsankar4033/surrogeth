@@ -11,7 +11,7 @@ const { isHexStr, isAddressStr, isNetworkStr } = require('./utils');
 const { createForkedWeb3, simulateTx } = require('./ethereum');
 const {
   KOVAN_RPC_URL, MAINNET_RPC_URL,
-  RELAYER_PRIVATE_KEY, RELAYER_MIN_TX_PROFIT, RELAYER_GAS_PRICE
+  RELAYER_PRIVATE_KEY, RELAYER_MIN_TX_PROFIT
 } = require('./config');
 
 const accounts = new Accounts();
@@ -95,8 +95,11 @@ app.post('/submit_tx', [
 
   const forkedWeb3 = createForkedWeb3(rpcUrl);
   const { balanceChange, txReceipt } = await simulateTx(forkedWeb3, to, data, value);
+  const { gasUsed } = txReceipt;
+  const gasPrice = await provider.getGasPrice();
+  const gasCost = gasUsed * gasPrice.toNumber();
 
-  if (balanceChange <= RELAYER_MIN_TX_PROFIT) {
+  if (balanceChange - gasCost <= RELAYER_MIN_TX_PROFIT) {
     res.status(403).json({ msg: 'Fee too low' })
   }
 
@@ -109,7 +112,7 @@ app.post('/submit_tx', [
       data,
       nonce,
       gasLimit,
-      gasPrice: RELAYER_GAS_PRICE,
+      gasPrice,
     }
 
     const signedTx = await signer.sign(unsignedTx);
@@ -124,5 +127,4 @@ app.post('/submit_tx', [
   });
 });
 
-app.listen(8080);
-console.log('Listening on port 8080');
+app.listen(8080, () => console.log('Listening on port 8080'));
