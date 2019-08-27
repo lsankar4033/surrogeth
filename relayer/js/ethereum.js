@@ -40,7 +40,8 @@ const buildSimTx = async (forkedWeb3, to, data, value) => {
 }
 
 /**
- * Simulate running a tx with the specified web3 instance and return the resulting web3 instance.
+ * Simulate running a tx with the specified web3 instance. Returns the transaction receipt and the balance change
+ * to the specified account.
  */
 const simulateTx = async (forkedWeb3, to, data, value, privateKey) => {
   const address = accounts.privateKeyToAccount(privateKey).address;

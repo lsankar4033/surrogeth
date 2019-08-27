@@ -10,7 +10,12 @@ const isAddressStr = (s) => {
     hexStrRE.test(s);
 }
 
+const isNetworkStr = (s) => {
+  return s === 'MAINNET' || s === 'KOVAN';
+}
+
 module.exports = {
   isHexStr,
-  isAddressStr
+  isAddressStr,
+  isNetworkStr
 };
