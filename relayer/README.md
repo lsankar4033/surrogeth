@@ -39,7 +39,7 @@ Descriptions:
 
 **RELAYER\_MIN\_TX\_PROFIT** - The minimum profit in Wei that this relayer must get from a transaction to actually relay it. If a transaction is submitted to this relayer that nets the relayer less profit than this value, the relayer will reject it.
 
-### Deployment
+### Running for Production Deployment
 First, make sure you've set up a proper `.env` file.
 
 The relayer is deployed as a single Docker container. To start, check out the [Docker docs](https://docs.docker.com) and install Docker.
@@ -65,8 +65,33 @@ $ curl localhost:$YOUR_PORT_HERE/address
 {"address":"0x.........."}
 ``` 
 
-### Development
-TODO
+### Running for Local Development
+First, make sure you've set up a proper `.env` file.
+
+Now, install nodejs (> v10.0.0) and npm however you prefer. 
+
+Next, install all dependencies:
+
+```
+$ npm i
+```
+
+Then, run the server:
+
+```
+$ npm start
+
+...
+
+Listening on port 8080
+```
+
+Finally, check that the server is running as expected:
+
+```
+$ curl localhost:8080/address
+{"address":"0x.........."}
+```
 
 ### Testing
 TODO
