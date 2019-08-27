@@ -16,5 +16,6 @@ const isNetworkStr = (s) => {
 
 module.exports = {
   isHexStr,
-  isAddressStr
+  isAddressStr,
+  isNetworkStr
 };
