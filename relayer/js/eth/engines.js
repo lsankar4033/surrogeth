@@ -10,7 +10,7 @@ const {
   KOVAN_RPC_URL,
   MAINNET_RPC_URL,
   RELAYER_PRIVATE_KEY
-} = require("./config");
+} = require("../config");
 
 const networkToRpcUrl = network => {
   if (network === "KOVAN") {
@@ -44,4 +44,10 @@ const getEthersProvider = network => {
 const getEthersWallet = network => {
   const rpcUrl = networkToRpcUrl(network);
   return new ethers.Wallet(RELAYER_PRIVATE_KEY, rpcUrl);
+};
+
+module.exports = {
+  createForkedWeb3,
+  getEthersProvider,
+  getEthersWallet
 };
