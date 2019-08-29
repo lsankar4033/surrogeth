@@ -1,7 +1,7 @@
 const Accounts = require("web3-eth-accounts");
 const accounts = new Accounts();
 
-const { RELAYER_PRIVATE_KEY } = require("../config");
+const { RELAYER_PRIVATE_KEY } = require("./config");
 
 const relayerAccount = {
   privateKey: RELAYER_PRIVATE_KEY,
