@@ -1,25 +1,18 @@
-const ganache = require("ganache-core");
-const Web3 = require("web3");
+/**
+ * Utilities for simulating ethereum txes on a forked blockchain.
+ */
+
 const Accounts = require("web3-eth-accounts");
 const accounts = new Accounts();
 
-/**
- * Create a forked version of web3 using the provided rpcUrl
- */
-const createForkedWeb3 = rpcUrl => {
-  return new Web3(
-    ganache.provider({
-      fork: rpcUrl
-    })
-  );
-};
+const { createForkedWeb3 } = require("./engines");
+const { relayerAccount } = require("../utils");
 
 /**
- * Sign the provided tx. Assumes that tx is as complete as it needs to be (i.e. with a valid nonce if on a
- * non-forked chain).
+ * Sign the provided tx.
  */
-const signTx = async (web3, tx, privateKey) => {
-  const result = await web3.eth.accounts.signTransaction(tx, privateKey);
+const signTx = async (forkedWeb3, tx, privateKey) => {
+  const result = await forkedWeb3.eth.accounts.signTransaction(tx, privateKey);
   return result["rawTransaction"];
 };
 
@@ -43,23 +36,23 @@ const buildSimTx = async (forkedWeb3, to, data, value) => {
  * Simulate running a tx with the specified web3 instance. Returns the transaction receipt and the balance change
  * to the specified account.
  */
-const simulateTx = async (forkedWeb3, to, data, value, privateKey) => {
-  const address = accounts.privateKeyToAccount(privateKey).address;
+const simulateTx = async (network, to, data, value) => {
+  const forkedWeb3 = createForkedWeb3(network);
+  const { address, privateKey } = relayerAccount;
 
   const tx = await buildSimTx(forkedWeb3, to, data, value);
+
+  // NOTE: gas price used is median gas price of last few blocks
   const signedTx = await signTx(forkedWeb3, tx, privateKey);
 
   const initBalance = await forkedWeb3.eth.getBalance(address);
-  const txReceipt = await forkedWeb3.eth.sendSignedTransaction(signedTx);
+  await forkedWeb3.eth.sendSignedTransaction(signedTx);
   const finalBalance = await forkedWeb3.eth.getBalance(address);
 
-  return {
-    balanceChange: finalBalance - initBalance,
-    txReceipt
-  };
+  const profit = finalBalance - initBalance;
+  return profit;
 };
 
 module.exports = {
-  createForkedWeb3,
   simulateTx
 };
