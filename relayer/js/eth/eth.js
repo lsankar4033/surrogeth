@@ -45,6 +45,7 @@ const sendTransaction = async (network, to, data, value) => {
 
   const nonce = await provider.getTransactionCount(address, "pending");
   const gasLimit = await getGasLimit(provider);
+  const gasPrice = await provider.getGasPrice();
   const unsignedTx = {
     to,
     value,

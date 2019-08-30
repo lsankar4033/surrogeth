@@ -64,6 +64,9 @@ const TEST_ETHERS_TX = {
   value: 300,
   from: relayerAccount.address
 };
+const NONCE = 2;
+const BLOCK_NUM = 23;
+const TEST_TX_HASH = "0x234";
 
 // .getTransactionCount (nonce)
 // .getBlockNumber
@@ -79,13 +82,48 @@ const getEthersProvider = network => {
       expect(tx).toStrictEqual(TEST_ETHERS_TX);
 
       return ethers.utils.bigNumberify(TEST_GAS_ESTIMATE);
+    },
+
+    getTransactionCount: (address, status) => {
+      expect(address).toBe(relayerAccount.address);
+      expect(status).toBe("pending");
+
+      return NONCE;
+    },
+
+    getBlockNumber: () => BLOCK_NUM,
+
+    getBlock: blockNum => {
+      expect(blockNum).toBe(BLOCK_NUM);
+      return { gasLimit: GAS_LIMIT };
+    },
+
+    sendTransaction: signedTx => {
+      expect(signedTx).toBe(SIGNED);
+
+      return TEST_TX_HASH;
     }
   };
 };
 
+const ETHERS_FULL_TX = Object.assign({}, TEST_ETHERS_TX, {
+  nonce: NONCE,
+  gasLimit: GAS_LIMIT,
+  gasPrice: ethers.utils.bigNumberify(TEST_GAS_PRICE)
+});
+delete ETHERS_FULL_TX.from;
+
 // .sign {to, value, data, nonce, gasLimit, gasPrice}
 const getEthersWallet = network => {
   expect(network).toBe(TEST_NETWORK);
+
+  return {
+    sign: tx => {
+      expect(tx).toStrictEqual(ETHERS_FULL_TX);
+
+      return SIGNED;
+    }
+  };
 };
 
 module.exports = {
@@ -96,5 +134,6 @@ module.exports = {
   TEST_ETHERS_TX,
   TEST_NETWORK,
   TEST_GAS_ESTIMATE,
-  TEST_GAS_PRICE
+  TEST_GAS_PRICE,
+  TEST_TX_HASH
 };
