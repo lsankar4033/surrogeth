@@ -49,9 +49,6 @@ const simulateTx = async (network, to, data, value) => {
   await forkedWeb3.eth.sendSignedTransaction(signedTx);
   const finalBalance = await forkedWeb3.eth.getBalance(address);
 
-  console.log(address);
-  console.log(`Init: ${initBalance} ; Final: ${finalBalance}`);
-
   const profit = finalBalance - initBalance;
   return profit;
 };

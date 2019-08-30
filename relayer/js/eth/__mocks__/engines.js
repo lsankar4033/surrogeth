@@ -1,24 +1,24 @@
+const ethers = require("ethers");
+
 const { relayerAccount } = require("../../utils");
 
+const SIGNED = "0x123";
 const INIT_RELAYER_BALANCE = 10000;
 const GAS_LIMIT = 100;
-const TEST_VAL = 300;
-const TEST_TO = "0x0000000000000000000000000000000000000001";
-const TEST_TX = {
-  to: TEST_TO,
+const TEST_NETWORK = "FOO";
+
+const TEST_WEB3_TX = {
+  to: "0x0000000000000000000000000000000000000001",
   data: "",
-  value: TEST_VAL,
+  value: 300,
   gas: GAS_LIMIT
 };
-const TEST_NETWORK = "FOO";
-const SIGNED = "0x123";
 
 const createForkedWeb3 = network => {
   expect(network).toBe(TEST_NETWORK);
 
   let relayerAddress = relayerAccount.address;
 
-  // web3 state. should re-use with ethersprovider + wallet (i.e. via a class)
   let balances = {};
   balances[relayerAddress] = INIT_RELAYER_BALANCE;
 
@@ -31,7 +31,7 @@ const createForkedWeb3 = network => {
     }
   };
   ret.eth.accounts.signTransaction = (tx, privateKey) => {
-    expect(tx).toStrictEqual(TEST_TX);
+    expect(tx).toStrictEqual(TEST_WEB3_TX);
     expect(privateKey).toBe(relayerAccount.privateKey);
 
     return { rawTransaction: SIGNED };
@@ -39,11 +39,13 @@ const createForkedWeb3 = network => {
   ret.eth.sendSignedTransaction = signedTx => {
     expect(signedTx).toBe(SIGNED);
 
-    balances[relayerAddress] -= TEST_VAL;
-    if (!(TEST_TO in balances)) {
-      balances[TEST_TO] = 0;
+    const { to, value } = TEST_WEB3_TX;
+
+    balances[relayerAddress] -= value;
+    if (!(to in balances)) {
+      balances[to] = 0;
     }
-    balances[TEST_TO] += TEST_VAL;
+    balances[to] += value;
   };
   ret.eth.getBlock = b => {
     expect(b).toBe("latest");
@@ -54,16 +56,45 @@ const createForkedWeb3 = network => {
   return ret;
 };
 
-// TODO
-const getEthersProvider = network => {};
+const TEST_GAS_PRICE = 1000;
+const TEST_GAS_ESTIMATE = 32;
+const TEST_ETHERS_TX = {
+  to: "0x0000000000000000000000000000000000000001",
+  data: "",
+  value: 300,
+  from: relayerAccount.address
+};
 
-// TODO
-const getEthersWallet = network => {};
+// .getTransactionCount (nonce)
+// .getBlockNumber
+// .getBlock
+// .sendTransaction (signed)
+const getEthersProvider = network => {
+  expect(network).toBe(TEST_NETWORK);
+
+  return {
+    getGasPrice: () => ethers.utils.bigNumberify(TEST_GAS_PRICE),
+
+    estimateGas: tx => {
+      expect(tx).toStrictEqual(TEST_ETHERS_TX);
+
+      return ethers.utils.bigNumberify(TEST_GAS_ESTIMATE);
+    }
+  };
+};
+
+// .sign {to, value, data, nonce, gasLimit, gasPrice}
+const getEthersWallet = network => {
+  expect(network).toBe(TEST_NETWORK);
+};
 
 module.exports = {
   createForkedWeb3,
   getEthersProvider,
   getEthersWallet,
-  TEST_TX,
-  TEST_NETWORK
+  TEST_WEB3_TX,
+  TEST_ETHERS_TX,
+  TEST_NETWORK,
+  TEST_GAS_ESTIMATE,
+  TEST_GAS_PRICE
 };
