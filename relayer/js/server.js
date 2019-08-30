@@ -12,6 +12,7 @@ const { createForkedWeb3, simulateTx } = require("./ethereum");
 const {
   KOVAN_RPC_URL,
   MAINNET_RPC_URL,
+  LOCAL_RPC_URL,
   RELAYER_PRIVATE_KEY,
   RELAYER_MIN_TX_PROFIT
 } = require("./config");
@@ -25,14 +26,17 @@ const nonceKey = `nonce_${address}`;
 const app = express();
 
 const networkToRpcUrl = {
+  LOCAL: LOCAL_RPC_URL,
   KOVAN: KOVAN_RPC_URL,
   MAINNET: MAINNET_RPC_URL
 };
 const networkToProvider = {
+  LOCAL: new ethers.providers.JsonRpcProvider(networkToRpcUrl["LOCAL"]),
   KOVAN: new ethers.providers.JsonRpcProvider(networkToRpcUrl["KOVAN"]),
   MAINNET: new ethers.providers.JsonRpcProvider(networkToRpcUrl["MAINNET"])
 };
 const networkToSigner = {
+  LOCAL: new ethers.Wallet(RELAYER_PRIVATE_KEY, networkToProvider["LOCAL"]),
   KOVAN: new ethers.Wallet(RELAYER_PRIVATE_KEY, networkToProvider["KOVAN"]),
   MAINNET: new ethers.Wallet(RELAYER_PRIVATE_KEY, networkToProvider["MAINNET"])
 };

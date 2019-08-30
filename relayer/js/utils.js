@@ -9,7 +9,7 @@ const isAddressStr = s => {
 };
 
 const isNetworkStr = s => {
-  return s === "MAINNET" || s === "KOVAN";
+  return ["MAINNET", "KOVAN", "LOCAL"].includes(s)
 };
 
 module.exports = {
