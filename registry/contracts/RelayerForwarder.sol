@@ -143,8 +143,6 @@ contract RelayerForwarder is Ownable {
             (uint256 fee, uint256 burn) = _relayCall(_applicationContracts[i], _encodedPayloads[i]);
 
             totalRelayerFee += fee;
-
-            // NOTE: Could explore batch updating reputation in the future
             reputation.updateReputation(relayer, burn);
         }
 
