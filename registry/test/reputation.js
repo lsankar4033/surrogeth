@@ -32,4 +32,15 @@ contract("RelayerReputation", accounts => {
       assert.equal(locatorType, "bar");
     });
   });
+
+  describe("updateReputation", () => {
+    it("fails: can only update reputation from forwarder address", async () => {
+      await expectRevert(
+        reputationContract.updateReputation(accounts[3], 100, {
+          from: accounts[1]
+        }),
+        "RelayerReputation: caller is not the forwarder"
+      );
+    });
+  });
 });

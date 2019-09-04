@@ -63,7 +63,7 @@ contract RelayerReputation {
      * @param _relayer The relayer whose reputation to update
      * @param _burnValue The amount of wei burned by the specified relayer
      */
-    function updateReputation(address _relayer, uint256 _burnValue) external {
+    function updateReputation(address _relayer, uint256 _burnValue) external onlyForwarder {
         if (relayerToRelayCount[_relayer] == 0) {
             _addRelayer(_relayer);
         }
