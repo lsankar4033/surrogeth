@@ -16,7 +16,7 @@
   },
   "scripts": {
     "test": "truffle test",
-    "lint": "npx pretty-quick"
+    "lint": "npx pretty-quick && solhint contracts/**/*.sol"
   },
   "author": "",
   "license": "ISC"
