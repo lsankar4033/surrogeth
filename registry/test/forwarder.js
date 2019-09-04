@@ -1,4 +1,4 @@
-const { expectRevert } = require('openzeppelin-test-helpers');
+const { expectRevert } = require("openzeppelin-test-helpers");
 
 const RelayerReputation = artifacts.require("RelayerReputation");
 const RelayerForwarder = artifacts.require("RelayerForwarder");
@@ -26,10 +26,12 @@ contract("RelayerForwarder", accounts => {
   let noFeePayload;
 
   beforeEach(async () => {
-    forwarderContract = await RelayerForwarder.new(burnNum, burnDenom, { from: owner });
+    forwarderContract = await RelayerForwarder.new(burnNum, burnDenom, {
+      from: owner
+    });
 
     applicationContract = await TestApplication.new(applicationFee);
-    applicationContract.send(applicationFunding, {from: accounts[0]}); // NOTE: Fund application contract
+    applicationContract.send(applicationFunding, { from: accounts[0] }); // NOTE: Fund application contract
 
     feePayload = await applicationContract.feePayload();
     noFeePayload = await applicationContract.noFeePayload();
@@ -38,11 +40,9 @@ contract("RelayerForwarder", accounts => {
   describe("relayCall", () => {
     it("fails: reputation not set", async () => {
       await expectRevert(
-        forwarderContract.relayCall(
-          applicationContract.address,
-          feePayload,
-          { from: accounts[0] }
-        ),
+        forwarderContract.relayCall(applicationContract.address, feePayload, {
+          from: accounts[0]
+        }),
         "RelayerForwarder: reputation contract must be set to relay calls"
       );
     });
@@ -51,8 +51,12 @@ contract("RelayerForwarder", accounts => {
       let reputationContract;
 
       beforeEach(async () => {
-        reputationContract = await RelayerReputation.new(forwarderContract.address);
-        await forwarderContract.setReputation(reputationContract.address, { from: owner });
+        reputationContract = await RelayerReputation.new(
+          forwarderContract.address
+        );
+        await forwarderContract.setReputation(reputationContract.address, {
+          from: owner
+        });
       });
 
       describe("no fee", () => {
@@ -61,7 +65,7 @@ contract("RelayerForwarder", accounts => {
             applicationContract.address,
             noFeePayload,
             { from: accounts[0] }
-          )
+          );
         });
 
         it("properly calls target application contract", async () => {
@@ -96,7 +100,7 @@ contract("RelayerForwarder", accounts => {
             applicationContract.address,
             feePayload,
             { from: accounts[0] }
-          )
+          );
         });
 
         it("updates reputation appropriately and stores burned eth in forwarder", async () => {
@@ -110,7 +114,9 @@ contract("RelayerForwarder", accounts => {
           let burn = await reputationContract.relayerToBurn(accounts[0]);
           assert.equal(burn.toNumber(), expectedBurn);
 
-          let forwarderBalance = await web3.eth.getBalance(forwarderContract.address);
+          let forwarderBalance = await web3.eth.getBalance(
+            forwarderContract.address
+          );
           assert.equal(forwarderBalance, expectedBurn);
 
           let count = await reputationContract.relayerToRelayCount(accounts[0]);
@@ -121,13 +127,16 @@ contract("RelayerForwarder", accounts => {
   });
 
   describe("batchRelayCall", () => {
-
     it("relays call to each specified application contract", async () => {
-      let reputationContract = await RelayerReputation.new(forwarderContract.address);
-      await forwarderContract.setReputation(reputationContract.address, { from: owner });
+      let reputationContract = await RelayerReputation.new(
+        forwarderContract.address
+      );
+      await forwarderContract.setReputation(reputationContract.address, {
+        from: owner
+      });
 
       let applicationContract2 = await TestApplication.new(applicationFee);
-      applicationContract2.send(applicationFunding, {from: accounts[0]}); // NOTE: Fund application contract
+      applicationContract2.send(applicationFunding, { from: accounts[0] }); // NOTE: Fund application contract
 
       // NOTE: fee on one, no fee on the other
       await forwarderContract.batchRelayCall(
@@ -151,22 +160,27 @@ contract("RelayerForwarder", accounts => {
       let burn = await reputationContract.relayerToBurn(accounts[0]);
       assert.equal(burn.toNumber(), expectedBurn);
 
-      let forwarderBalance = await web3.eth.getBalance(forwarderContract.address);
+      let forwarderBalance = await web3.eth.getBalance(
+        forwarderContract.address
+      );
       assert.equal(forwarderBalance, expectedBurn);
     });
   });
 
   describe("burn", () => {
-
     it("sends all of the registry's balance to the burn address", async () => {
-      let reputationContract = await RelayerReputation.new(forwarderContract.address);
-      await forwarderContract.setReputation(reputationContract.address, { from: owner });
+      let reputationContract = await RelayerReputation.new(
+        forwarderContract.address
+      );
+      await forwarderContract.setReputation(reputationContract.address, {
+        from: owner
+      });
 
       await forwarderContract.relayCall(
         applicationContract.address,
         feePayload,
         { from: accounts[0] }
-      )
+      );
 
       let initNullBalance = await web3.eth.getBalance(nullAddress);
 

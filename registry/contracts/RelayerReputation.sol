@@ -10,6 +10,13 @@ contract RelayerReputation {
     mapping(address => uint256) public relayerToBurn;
     mapping(address => uint256) public relayerToRelayCount;
 
+    // Information that allows clients to find relayers on the web. i.e. via http or tor
+    struct RelayerLocator {
+        string locator;     // i.e. Tor or HTTP address
+        string locatorType; // i.e. 'tor' or 'http'
+    }
+    mapping(address => RelayerLocator) public relayerToLocator;
+
     // Clients can enumerate relayerList using nextRelayer and then reference relayerToBurn and
     // relayerToRelayCount to determine wnich relayer(s) to use
     mapping(uint256 => address) public relayerList;
@@ -31,6 +38,22 @@ contract RelayerReputation {
         relayerList[nextRelayer] = _relayer;
         nextRelayer += 1;
         emit RelayerAdded(_relayer);
+    }
+
+    /**
+     * Updates the locator for the specified relayer address. Can only be called from that address (to prevent
+     * anyone from griefing a relayer by changing its locator).
+     * @param _relayer The relayer whose locator to update
+     * @param _locator The new locator to set
+     * @param _locatorType The locator type to use
+     */
+    function setRelayerLocator(address _relayer, string calldata _locator, string calldata _locatorType) external {
+        require(_relayer == msg.sender, "RelayerReputation: can only set the locator for self");
+
+        relayerToLocator[_relayer] = RelayerLocator(
+            _locator,
+            _locatorType
+        );
     }
 
     /**
