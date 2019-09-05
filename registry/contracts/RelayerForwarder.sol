@@ -31,6 +31,29 @@ contract RelayerForwarder is Ownable {
         return feePlusBurn.mul(burnFraction.numerator).div(burnFraction.denominator);
     }
 
+    function _relayCall(
+        address _applicationContract,
+        bytes memory _encodedPayload
+    ) internal returns (uint256 fee, uint256 burn) {
+        // feePlusBurn calculated by the increase in balance of this contract
+        uint256 prevBalance = address(this).balance;
+        (bool success,) = _applicationContract.call(_encodedPayload);
+        require(success, "RelayerForwarder: failure calling application contract");
+        uint256 finalBalance = address(this).balance;
+
+        if (finalBalance > prevBalance) {
+            uint256 feePlusBurn = finalBalance.sub(prevBalance);
+            burn = _computeBurn(feePlusBurn);
+            fee = feePlusBurn.sub(burn);
+        } else {
+            // Set burn, fee to 0 explicitly if there was no fee. No need to send any fee to the relayer
+            burn = 0;
+            fee = 0;
+        }
+
+        return (fee, burn);
+    }
+
     /**
      * Enables sending Ether to this contract
      */
@@ -85,26 +108,12 @@ contract RelayerForwarder is Ownable {
 
         require(tx.origin == msg.sender, "RelayerForwarder: cannot relay calls from another contract");
 
-        // feePlusBurn calculated by the increase in balance of this contract
-        uint256 prevBalance = address(this).balance;
-        (bool success,) = _applicationContract.call(_encodedPayload);
-        require(success, "RelayerForwarder: failure calling application contract");
-        uint256 finalBalance = address(this).balance;
+        (uint256 fee, uint256 burn) = _relayCall(_applicationContract, _encodedPayload);
 
         address payable relayer = msg.sender;
-
-        uint256 burn;
-        if (finalBalance > prevBalance) {
-            uint256 feePlusBurn = finalBalance.sub(prevBalance);
-            burn = _computeBurn(feePlusBurn);
-            uint256 fee = feePlusBurn.sub(burn);
-
+        if (fee > 0) {
             relayer.transfer(fee);
-        } else {
-            // Set burn, fee to 0 explicitly if there was no fee. No need to send any fee to the relayer
-            burn = 0;
         }
-
         reputation.updateReputation(relayer, burn);
     }
 
@@ -130,30 +139,10 @@ contract RelayerForwarder is Ownable {
 
         address payable relayer = msg.sender;
         uint256 totalRelayerFee = 0;
-        // NOTE: Logic mirrors that of `relayCall`, but we avoid putting it into an internal method to save
-        // on gas from passing _encodedPayload in memory.
         for (uint i = 0; i < _applicationContracts.length; i++) {
-            address applicationContract = _applicationContracts[i];
+            (uint256 fee, uint256 burn) = _relayCall(_applicationContracts[i], _encodedPayloads[i]);
 
-            // feePlusBurn calculated by the increase in balance of this contract
-            uint256 prevBalance = address(this).balance;
-            (bool success,) = applicationContract.call(_encodedPayloads[i]);
-            require(success, "RelayerForwarder: failure calling application contract");
-            uint256 finalBalance = address(this).balance;
-
-            uint256 burn;
-            if (finalBalance > prevBalance) {
-                uint256 feePlusBurn = finalBalance.sub(prevBalance);
-                burn = _computeBurn(feePlusBurn);
-                uint256 fee = feePlusBurn.sub(burn);
-
-                totalRelayerFee += fee;
-            } else {
-                // Set burn, fee to 0 explicitly if there was no fee. No need to send any fee to the relayer
-                burn = 0;
-            }
-
-            // NOTE: Could explore batch updating reputation in the future
+            totalRelayerFee += fee;
             reputation.updateReputation(relayer, burn);
         }
 
