@@ -19,12 +19,19 @@ contract ERC20RelayerReputation {
     }
     mapping(address => TokenList) private relayerToTokenList;
 
-    // TODO: documentation
+    /**
+     * Gets the next ERC20 token index to be used for the specified relayer
+     * @param _relayer relayer whose next index to get
+     */
     function getRelayerNextToken(address _relayer) external view returns (uint256) {
         return relayerToTokenList[_relayer].nextToken;
     }
 
-    // TODO: documentation
+    /**
+     * Gets the ERC20 token stored at a specified index for a given relayer.
+     * @param _relayer relayer whose tokens to search
+     * @param _idx index in the relayer's token list to return
+     */
     function getRelayerToken(address _relayer, uint256 _idx) external view returns (address) {
         return relayerToTokenList[_relayer].tokenList[_idx];
     }
