@@ -4,5 +4,5 @@ Smart contract for general forwarding to any contract that requires transaction 
 to support micromix
 
 ## TODO
-- add relayer URL/Tor to registry!
-- finish unit tests (esp. batchRelayCall)
+
+- add unit tests for ERC20 registry

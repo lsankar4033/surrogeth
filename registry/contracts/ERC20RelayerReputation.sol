@@ -17,7 +17,17 @@ contract ERC20RelayerReputation {
         uint256 nextToken;
         mapping(uint256 => address) tokenList;
     }
-    mapping(address => TokenList) public relayerToTokenList;
+    mapping(address => TokenList) private relayerToTokenList;
+
+    // TODO: documentation
+    function getRelayerNextToken(address _relayer) external view returns (uint256) {
+        return relayerToTokenList[_relayer].nextToken;
+    }
+
+    // TODO: documentation
+    function getRelayerToken(address _relayer, uint256 _idx) external view returns (address) {
+        return relayerToTokenList[_relayer].tokenList[_idx];
+    }
 
     // Information that allows clients to find relayers on the web. i.e. via http or tor
     struct RelayerLocator {
@@ -39,7 +49,7 @@ contract ERC20RelayerReputation {
      * Throws if called by any account other than the forwarder.
      */
     modifier onlyForwarder() {
-        require(msg.sender == forwarderAddress, "RelayerReputation: caller is not the forwarder");
+        require(msg.sender == forwarderAddress, "ERC20RelayerReputation: caller is not the forwarder");
         _;
     }
 
@@ -69,7 +79,7 @@ contract ERC20RelayerReputation {
      * @param _locatorType The locator type to use
      */
     function setRelayerLocator(address _relayer, string calldata _locator, string calldata _locatorType) external {
-        require(_relayer == msg.sender, "RelayerReputation: can only set the locator for self");
+        require(_relayer == msg.sender, "ERC20RelayerReputation: can only set the locator for self");
 
         relayerToLocator[_relayer] = RelayerLocator(
             _locator,
