@@ -60,16 +60,16 @@ contract ERC20RelayerForwarder is Ownable {
     }
 
     /**
-    * Enables sending Ether to this contract
-    */
+     * Enables sending Ether to this contract
+     */
     function () external payable {}
 
     /**
-    * Sets the fraction of fee that's burned.
-    *
-        * @param _burnNum The new numerator for burnFraction
-    * @param _burnDenom The new denominator for burnFraction
-        */
+     * Sets the fraction of fee that's burned.
+     *
+     * @param _burnNum The new numerator for burnFraction
+     * @param _burnDenom The new denominator for burnFraction
+     */
     function setBurnFraction(uint256 _burnNum, uint256 _burnDenom) external onlyOwner {
         require(_burnDenom >= _burnNum, "ERC20RelayerForwarder: burn fraction denominator must be >= numerator");
         burnFraction = Fraction(
@@ -79,33 +79,33 @@ contract ERC20RelayerForwarder is Ownable {
     }
 
     /**
-    * Sets the reputation contract.
-    *
-        * @param _reputationAddress The address of the reputation contract to set.
-        */
+     * Sets the reputation contract.
+     *
+     * @param _reputationAddress The address of the reputation contract to set.
+     */
     function setReputation(address _reputationAddress) external onlyOwner {
         reputation = ERC20RelayerReputation(_reputationAddress);
     }
 
     /**
-    * Sends all balance accrued in this contract to the burn address (0x0).
-    * Anyone can call this function.
-        * It is good to periodically drain the burnable balance from the contract
-    * so that we reduce harm in the event of a hack.
-        */
+     * Sends all balance accrued in this contract to the burn address (0x0).
+     * Anyone can call this function.
+     * It is good to periodically drain the burnable balance from the contract
+     * so that we reduce harm in the event of a hack.
+     */
     function burnBalance() external {
         burnAddress.transfer(address(this).balance);
     }
 
     /**
-    * Calls an application contract and updates relayer reputation accordingly. It's assumed that the
-    * application contract sends back any fees to this contract, from which burn is taken.
-    *
-    * @param _applicationContract The application contract to call
-    * @param _encodedPayload Payload to call _applicationContract with. Must be encoded as with
-    *                        abi.encodePacked to properly work with .call
-    * @param _erc20Address ERC20 contract address that's used for fee payment
-    */
+     * Calls an application contract and updates relayer reputation accordingly. It's assumed that the
+     * application contract sends back any fees to this contract, from which burn is taken.
+     *
+     * @param _applicationContract The application contract to call
+     * @param _encodedPayload Payload to call _applicationContract with. Must be encoded as with
+     *                        abi.encodePacked to properly work with .call
+     * @param _erc20Address ERC20 contract address that's used for fee payment
+     */
     function relayCall(
         address _applicationContract,
         bytes calldata _encodedPayload,
@@ -127,12 +127,12 @@ contract ERC20RelayerForwarder is Ownable {
     }
 
     /**
-    * Calls multiple application contracts and updates relayer reputation accordingly.
-    *
-    * @param _applicationContracts The application contracts to call.
-    * @param _encodedPayloads Payloads to call each contract in _applicationContract with. Must be encoded as
-    *                         with abi.encodePacked.
-    * @param _erc20Addresses ERC20 contract addresses that're used for fee payment
+     * Calls multiple application contracts and updates relayer reputation accordingly.
+     *
+     * @param _applicationContracts The application contracts to call.
+     * @param _encodedPayloads Payloads to call each contract in _applicationContract with. Must be encoded as
+     *                         with abi.encodePacked.
+     * @param _erc20Addresses ERC20 contract addresses that're used for fee payment
      */
     function batchRelayCall(
         address[] calldata _applicationContracts,
