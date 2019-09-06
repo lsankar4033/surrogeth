@@ -6,7 +6,6 @@ const RelayerForwarder = artifacts.require("RelayerForwarder");
 const TestApplication = artifacts.require("TestApplication");
 
 // TODO:
-// - tests for onlyOwner access control of setReputation, setBurnFraction
 // - test that can't call relayCall or burnRelayCall from another contract
 
 contract("RelayerForwarder", accounts => {
