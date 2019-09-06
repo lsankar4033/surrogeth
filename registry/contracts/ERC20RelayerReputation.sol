@@ -2,13 +2,22 @@ pragma solidity ^0.5.10;
 
 contract ERC20RelayerReputation {
     event RelayerAdded(address indexed _relayer);
-    event ReputationUpdated(address indexed _relayer, uint256 _burnValue);
+    event RelayerTokenPairAdded(address indexed _relayer, address _erc20);
+
+    event ReputationUpdated(address indexed _relayer, address _erc20, uint256 _burnValue);
 
     address public forwarderAddress;
 
     // 'Reputation' maps
     mapping(address => mapping(address => uint256)) public relayerToTokenToBurn;
-    mapping(address => uint256) public relayerToRelayCount;
+    mapping(address => mapping(address => uint256)) public relayerToTokenToCount;
+
+    // This enables enumeration of all tokens that a given relayers has serviced from the frontend
+    struct TokenList {
+        uint256 nextToken;
+        mapping(uint256 => address) tokenList;
+    }
+    mapping(address => TokenList) public relayerToTokenList;
 
     // Information that allows clients to find relayers on the web. i.e. via http or tor
     struct RelayerLocator {
@@ -37,7 +46,19 @@ contract ERC20RelayerReputation {
     function _addRelayer(address _relayer) internal {
         relayerList[nextRelayer] = _relayer;
         nextRelayer += 1;
+
+        relayerToTokenList[_relayer] = TokenList(1);
+
         emit RelayerAdded(_relayer);
+    }
+
+    function _addTokenToRelayer(address _relayer, address _erc20Address) internal {
+        uint256 nextToken = relayerToTokenList[_relayer].nextToken;
+
+        relayerToTokenList[_relayer].tokenList[nextToken] = _erc20Address;
+        relayerToTokenList[_relayer].nextToken = nextToken + 1;
+
+        emit RelayerTokenPairAdded(_relayer, _erc20Address);
     }
 
     /**
@@ -65,12 +86,16 @@ contract ERC20RelayerReputation {
      * @param _burnValue The amount of wei burned by the specified relayer
      */
     function updateReputation(address _relayer, address _erc20Address, uint256 _burnValue) external onlyForwarder {
-        if (relayerToRelayCount[_relayer] == 0) {
+        if (relayerToTokenList[_relayer].nextToken == 0) {
             _addRelayer(_relayer);
         }
 
+        if (relayerToTokenToCount[_relayer][_erc20Address] == 0) {
+            _addTokenToRelayer(_relayer, _erc20Address);
+        }
+
         relayerToTokenToBurn[_relayer][_erc20Address] += _burnValue;
-        relayerToRelayCount[_relayer] += 1;
-        emit ReputationUpdated(_relayer, _burnValue);
+        relayerToTokenToCount[_relayer][_erc20Address] += 1;
+        emit ReputationUpdated(_relayer, _erc20Address, _burnValue);
     }
 }
