@@ -12,7 +12,7 @@ contract ERC20RelayerReputation {
     mapping(address => mapping(address => uint256)) public relayerToTokenToBurn;
     mapping(address => mapping(address => uint256)) public relayerToTokenToCount;
 
-    // This enables enumeration of all tokens that a given relayers has serviced from the frontend
+    // This enables enumeration of all tokens that a given relayer has serviced
     struct TokenList {
         uint256 nextToken;
         mapping(uint256 => address) tokenList;
