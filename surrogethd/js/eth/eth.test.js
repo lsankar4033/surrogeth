@@ -11,13 +11,13 @@ describe("getFee", () => {
       TEST_GAS_ESTIMATE,
       TEST_GAS_PRICE
     } = require("./engines");
-    const { RELAYER_MIN_TX_PROFIT } = require("../config");
+    const { SURROGETH_MIN_TX_PROFIT } = require("../config");
 
     const { to, data, value } = TEST_ETHERS_TX;
     const fee = await getFee(TEST_NETWORK, to, data, value);
 
     expect(fee).toBe(
-      TEST_GAS_ESTIMATE * TEST_GAS_PRICE + RELAYER_MIN_TX_PROFIT
+      TEST_GAS_ESTIMATE * TEST_GAS_PRICE + SURROGETH_MIN_TX_PROFIT
     );
   });
 });

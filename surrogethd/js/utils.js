@@ -1,11 +1,11 @@
 const Accounts = require("web3-eth-accounts");
 const accounts = new Accounts();
 
-const { RELAYER_PRIVATE_KEY } = require("./config");
+const { SURROGETH_PRIVATE_KEY } = require("./config");
 
 const relayerAccount = {
-  privateKey: RELAYER_PRIVATE_KEY,
-  address: accounts.privateKeyToAccount(RELAYER_PRIVATE_KEY).address
+  privateKey: SURROGETH_PRIVATE_KEY,
+  address: accounts.privateKeyToAccount(SURROGETH_PRIVATE_KEY).address
 };
 
 const hexStrRE = /^0x[0-9A-Fa-f]+$/;

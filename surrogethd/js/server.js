@@ -13,8 +13,7 @@ const {
   KOVAN_RPC_URL,
   MAINNET_RPC_URL,
   LOCAL_RPC_URL,
-  RELAYER_PRIVATE_KEY,
-  RELAYER_MIN_TX_PROFIT
+  SURROGETH_MIN_TX_PROFIT
 } = require("./config");
 
 const { simulateTx } = require("./eth/simulationEth");
@@ -65,7 +64,7 @@ app.post(
     const { to, data, value, network } = req.query;
 
     const profit = await simulateTx(network, to, data, value);
-    if (profit <= RELAYER_MIN_TX_PROFIT) {
+    if (profit <= SURROGETH_MIN_TX_PROFIT) {
       res.status(403).json({ msg: "Fee too low" });
     }
 
