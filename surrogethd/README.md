@@ -22,15 +22,15 @@ $ touch .env
 Then, add the following configuration variables to this file. You must specify a value for each of them:
 
 ```
-RELAYER_PRIVATE_KEY=0x.............................
+SURROGETH_PRIVATE_KEY=0x.............................
 LOCAL_RPC_URL=...............
 KOVAN_RPC_URL=...............
 MAINNET_RPC_URL=...............
-RELAYER_MIN_TX_PROFIT=...
+SURROGETH_MIN_TX_PROFIT=...
 ```
 Descriptions:
 
-**RELAYER\_PRIVATE\_KEY** - hex string representing the private key from which this relayer sends transactions.
+**SURROGETH\_PRIVATE\_KEY** - hex string representing the private key from which this relayer sends transactions.
 
 **LOCAL\_RPC\_URL** - URL of the RPC endpoint used to interact with the local network. I.e. Ganache RPC URL.
 
@@ -38,7 +38,7 @@ Descriptions:
 
 **MAINNET\_RPC\_URL** - URL of the RPC endpoint used to interact with Ethereum mainnet. I.e. Infura or Geth/Parity RPC URL.
 
-**RELAYER\_MIN\_TX\_PROFIT** - The minimum profit in Wei that this relayer must get from a transaction to actually relay it. If a transaction is submitted to this relayer that nets the relayer less profit than this value, the relayer will reject it.
+**SURROGETH\_MIN\_TX\_PROFIT** - The minimum profit in Wei that this relayer must get from a transaction to actually relay it. If a transaction is submitted to this relayer that nets the relayer less profit than this value, the relayer will reject it.
 
 ### Running for Production Deployment
 First, make sure you've set up a proper `.env` file.
