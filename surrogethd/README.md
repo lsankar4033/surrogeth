@@ -8,7 +8,7 @@ First, clone the repo and `cd` into this directory:
 
 ```
 $ git@github.com:lsankar4033/micromix_relayer.git
-$ cd micromix_relayer/relayer 
+$ cd micromix_relayer/relayer
 ```
 
 ### Env
@@ -64,12 +64,12 @@ To check that the service is running as expected, try hitting it:
 ```
 $ curl localhost:$YOUR_PORT_HERE/address
 {"address":"0x.........."}
-``` 
+```
 
 ### Running for Local Development
 First, make sure you've set up a proper `.env` file.
 
-Now, install nodejs (> v10.0.0) and npm however you prefer. 
+Now, install nodejs (> v10.0.0) and npm however you prefer.
 
 Next, install all dependencies:
 
