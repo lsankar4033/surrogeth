@@ -27,20 +27,28 @@ LOCAL_RPC_URL=...............
 KOVAN_RPC_URL=...............
 MAINNET_RPC_URL=...............
 SURROGETH_MIN_TX_PROFIT=...
+KOVAN_ALLOWED_RECIPIENTS=0x............................. 0x.............................
+MAINNET_ALLOWED_RECIPIENTS=0x.............................
 ```
-Descriptions:
 
-**SURROGETH\_PRIVATE\_KEY** - hex string representing the private key from which this relayer sends transactions.
+###Descriptions:
 
-**LOCAL\_RPC\_URL** - URL of the RPC endpoint used to interact with the local network. I.e. Ganache RPC URL.
+**SURROGETH_PRIVATE_KEY** - hex string representing the private key from which this relayer sends transactions.
 
-**KOVAN\_RPC\_URL** - URL of the RPC endpoint used to interact with the Kovan network. I.e. Infura or Geth/Parity RPC URL.
+**LOCAL_RPC_URL** - URL of the RPC endpoint used to interact with the local network. I.e. Ganache RPC URL.
 
-**MAINNET\_RPC\_URL** - URL of the RPC endpoint used to interact with Ethereum mainnet. I.e. Infura or Geth/Parity RPC URL.
+**KOVAN_RPC_URL** - URL of the RPC endpoint used to interact with the Kovan network. I.e. Infura or Geth/Parity RPC URL.
 
-**SURROGETH\_MIN\_TX\_PROFIT** - The minimum profit in Wei that this relayer must get from a transaction to actually relay it. If a transaction is submitted to this relayer that nets the relayer less profit than this value, the relayer will reject it.
+**MAINNET_RPC_URL** - URL of the RPC endpoint used to interact with Ethereum mainnet. I.e. Infura or Geth/Parity RPC URL.
+
+**SURROGETH_MIN_TX_PROFIT** - The minimum profit in Wei that this relayer must get from a transaction to actually relay it. If a transaction is submitted to this relayer that nets the relayer less profit than this value, the relayer will reject it.
+
+**KOVAN_ALLOWED_RECIPIENTS** - Space-delimited list of allowed contract addresses this relayer will relay for on Kovan. If left blank, it's assumed that all contracts are allowed.
+
+**MAINNET_ALLOWED_RECIPIENTS** - Space-delimited list of allowed contract addresses this relayer will relay for on Mainnet. If left blank, it's assumed that all contracts are allowed.
 
 ### Running for Production Deployment
+
 First, make sure you've set up a proper `.env` file.
 
 The relayer is deployed as a single Docker container. To start, check out the [Docker docs](https://docs.docker.com) and install Docker.
@@ -67,6 +75,7 @@ $ curl localhost:$YOUR_PORT_HERE/address
 ```
 
 ### Running for Local Development
+
 First, make sure you've set up a proper `.env` file.
 
 Now, install nodejs (> v10.0.0) and npm however you prefer.

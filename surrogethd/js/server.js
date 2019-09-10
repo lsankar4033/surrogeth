@@ -7,7 +7,8 @@ const {
   relayerAccount,
   isHexStr,
   isAddressStr,
-  isNetworkStr
+  isNetworkStr,
+  isValidRecipient
 } = require("./utils");
 const {
   KOVAN_RPC_URL,
@@ -20,7 +21,7 @@ const { simulateTx } = require("./eth/simulationEth");
 const { getFee, sendTransaction } = require("./eth/eth");
 
 const lock = new AsyncLock();
-const nonceKey = `nonce_${address}`;
+const nonceKey = `nonce_${relayerAccount.address}`;
 
 const app = express();
 
@@ -43,6 +44,10 @@ app.get(
     }
     const { to, data, value, network } = req.query;
 
+    if (!isValidRecipient(to, network)) {
+      res.status(403).json({ msg: `I don't send transactions to ${to}` });
+    }
+
     const fee = await getFee(network, to, data, value);
     res.json({ fee });
   }
@@ -62,6 +67,10 @@ app.post(
       res.status(422).json({ errors: errors.array() });
     }
     const { to, data, value, network } = req.query;
+
+    if (!isValidRecipient(to, network)) {
+      res.status(403).json({ msg: `I don't send transactions to ${to}` });
+    }
 
     const profit = await simulateTx(network, to, data, value);
     if (profit <= SURROGETH_MIN_TX_PROFIT) {
