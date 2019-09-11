@@ -3,7 +3,7 @@
  */
 
 const { getEthersProvider, getEthersWallet } = require("./engines");
-const { RELAYER_MIN_TX_PROFIT } = require("../config");
+const { SURROGETH_MIN_TX_PROFIT } = require("../config");
 const { relayerAccount } = require("../utils");
 
 /**
@@ -23,7 +23,7 @@ const getFee = async (network, to, data, value) => {
 
   // NOTE: May want to change to return a BigNumber
   const cost = gasPrice.toNumber() * gasEstimate.toNumber();
-  return cost + RELAYER_MIN_TX_PROFIT;
+  return cost + SURROGETH_MIN_TX_PROFIT;
 };
 
 const getGasLimit = async provider => {

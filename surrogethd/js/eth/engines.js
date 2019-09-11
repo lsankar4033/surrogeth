@@ -9,7 +9,7 @@ const Web3 = require("web3");
 const {
   KOVAN_RPC_URL,
   MAINNET_RPC_URL,
-  RELAYER_PRIVATE_KEY
+  SURROGETH_PRIVATE_KEY
 } = require("../config");
 
 const networkToRpcUrl = network => {
@@ -43,7 +43,7 @@ const getEthersProvider = network => {
 // NOTE: Creates a new provider/wallet on *each* invocation
 const getEthersWallet = network => {
   const rpcUrl = networkToRpcUrl(network);
-  return new ethers.Wallet(RELAYER_PRIVATE_KEY, rpcUrl);
+  return new ethers.Wallet(SURROGETH_PRIVATE_KEY, rpcUrl);
 };
 
 module.exports = {

@@ -1,7 +1,16 @@
-# micromix_relayer
+# Surrogeth
 
-Relayer + relayer registry contract. These are designed generally, to accomodate any application requiring
-transaction abstraction, but are initially being developed for [micromix](https://github.com/weijiekoh/mixer).
+Surrogeth is a general [meta-transaction](https://medium.com/@austin_48503/ethereum-meta-transactions-90ccf0859e84)
+network. It's designed to support any case where an Ethereum dapp's users shouldn't be paying the gas costs for their transactions.
 
-## TODO
-- setup instructions for each project
+It was originally built to support [MicroMix](https://micromix.app), but we're hoping it can support other applications in the future!
+
+## Contents
+
+Surrogeth consists of two components. Build instructions for each exist in its respective directory:
+
+| component | description |
+|---|---|
+| [surrogethd](https://github.com/lsankar4033/surrogeth/tree/master/surrogethd) | The surrogeth daemon, a node server that anyone can run to contribute to the Surrogeth network. |
+| [burnRegistry](https://github.com/lsankar4033/surrogeth/tree/master/burnRegistry) | A trustless discovery mechanism for Surrogeth nodes. |
+

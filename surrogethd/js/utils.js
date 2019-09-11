@@ -1,11 +1,15 @@
 const Accounts = require("web3-eth-accounts");
 const accounts = new Accounts();
 
-const { RELAYER_PRIVATE_KEY } = require("./config");
+const {
+  SURROGETH_PRIVATE_KEY,
+  KOVAN_ALLOWED_RECIPIENTS,
+  MAINNET_ALLOWED_RECIPIENTS
+} = require("./config");
 
 const relayerAccount = {
-  privateKey: RELAYER_PRIVATE_KEY,
-  address: accounts.privateKeyToAccount(RELAYER_PRIVATE_KEY).address
+  privateKey: SURROGETH_PRIVATE_KEY,
+  address: accounts.privateKeyToAccount(SURROGETH_PRIVATE_KEY).address
 };
 
 const hexStrRE = /^0x[0-9A-Fa-f]+$/;
@@ -19,12 +23,32 @@ const isAddressStr = s => {
 };
 
 const isNetworkStr = s => {
-  return ["MAINNET", "KOVAN", "LOCAL"].includes(s)
+  return ["MAINNET", "KOVAN", "LOCAL"].includes(s);
+};
+
+/**
+ * Determines if the specified recipient contract is allowed to receive relayed transactions from this node
+ */
+const isValidRecipient = (recipient, network) => {
+  if (network === "KOVAN") {
+    return (
+      KOVAN_ALLOWED_RECIPIENTS.length === 0 ||
+      KOVAN_ALLOWED_RECIPIENTS.includes(recipient)
+    );
+  } else if (network === "MAINNET") {
+    return (
+      MAINNET_ALLOWED_RECIPIENTS.length === 0 ||
+      MAINNET_ALLOWED_RECIPIENTS.includes(recipient)
+    );
+  } else {
+    throw `Network ${network} not recognized!`;
+  }
 };
 
 module.exports = {
   isHexStr,
   isAddressStr,
   isNetworkStr,
-  relayerAccount
+  relayerAccount,
+  isValidRecipient
 };
