@@ -94,10 +94,26 @@ describe("/submit_tx", () => {
   });
 
   test("returns a 403 in the case of an invalid recipient", async () => {
-    // TODO
+    const { TEST_ETHERS_TX, TEST_NETWORK } = require(`${SRC_PATH}/eth/engines`);
+
+    const invalidRecipient = "0x0000000000000000000000000000000000000002";
+    const response = await request(app)
+      .get("/fee")
+      .query({
+        to: invalidRecipient,
+        data: TEST_ETHERS_TX.data,
+        value: TEST_ETHERS_TX.value,
+        network: TEST_NETWORK
+      });
+
+    expect(response.statusCode).toBe(403);
+    expect(response.body["msg"]).toBe(
+      `${invalidRecipient} is not a valid recipient`
+    );
   });
 
   test("returns a 403 in case of too low of profit", async () => {
     // TODO
+    // NOTE: Will need to change how config is mocked to make this test easy to represent
   });
 });

@@ -1,8 +1,9 @@
-describe("getFee", () => {
-  beforeEach(() => {
-    jest.mock("./engines");
-  });
+beforeEach(() => {
+  jest.mock("./engines");
+  jest.mock("../config");
+});
 
+describe("getFee", () => {
   test("computes the fee properly", async () => {
     const { getFee } = require("./eth");
     const {
@@ -23,10 +24,6 @@ describe("getFee", () => {
 });
 
 describe("sendTransaction", () => {
-  beforeEach(() => {
-    jest.mock("./engines");
-  });
-
   test("signs and sends the specified transaction", async () => {
     const { sendTransaction } = require("./eth");
     const {
