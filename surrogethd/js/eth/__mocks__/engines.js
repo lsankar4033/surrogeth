@@ -123,7 +123,7 @@ const getEthersWallet = network => {
 
 const isValidRecipient = (recipient, network) => {
   expect(network).toBe(TEST_NETWORK);
-  return true;
+  return recipient === TEST_ETHERS_TX.to || recipient === TEST_WEB3_TX.to;
 };
 
 module.exports = {
