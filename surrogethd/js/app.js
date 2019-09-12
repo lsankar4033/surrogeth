@@ -5,11 +5,11 @@ const AsyncLock = require("async-lock");
 
 const {
   relayerAccount,
-  isHexStr,
+  isTxDataStr,
   isAddressStr,
-  isNetworkStr,
-  isValidRecipient
+  isNetworkStr
 } = require("./utils");
+const { isValidRecipient } = require("./eth/engines");
 const {
   KOVAN_RPC_URL,
   MAINNET_RPC_URL,
@@ -33,11 +33,14 @@ app.get(
   "/fee",
   [
     check("to").custom(isAddressStr),
-    check("data").custom(isHexStr),
-    check("value").isInt(),
+    check("data").custom(isTxDataStr),
+    check("value")
+      .isInt()
+      .toInt(),
     check("network").custom(isNetworkStr)
   ],
   async (req, res) => {
+    console.log("hello!");
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       res.status(422).json({ errors: errors.array() });
@@ -57,8 +60,10 @@ app.post(
   "/submit_tx",
   [
     check("to").custom(isAddressStr),
-    check("data").custom(isHexStr),
-    check("value").isInt(),
+    check("data").custom(isTxDataStr),
+    check("value")
+      .isInt()
+      .toInt(),
     check("network").custom(isNetworkStr)
   ],
   async (req, res) => {
