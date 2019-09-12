@@ -24,6 +24,7 @@ const lock = new AsyncLock();
 const nonceKey = `nonce_${relayerAccount.address}`;
 
 const app = express();
+app.use(express.json());
 
 app.get("/address", (req, res) => {
   res.json({ address: relayerAccount.address });
@@ -42,15 +43,12 @@ app.get(
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      res.status(422).json({ errors: errors.array() });
-      return;
+      return res.status(422).json({ errors: errors.array() });
     }
     const { to, data, value, network } = req.query;
 
     if (!isValidRecipient(to, network)) {
-      console.log("got here!");
-      res.status(403).json({ msg: `${to} is not a valid recipient` });
-      return;
+      return res.status(403).json({ msg: `${to} is not a valid recipient` });
     }
 
     const fee = await getFee(network, to, data, value);
@@ -71,33 +69,30 @@ app.post(
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      res.status(422).json({ errors: errors.array() });
-      return;
+      return res.status(422).json({ errors: errors.array() });
     }
-    const { to, data, value, network } = req.query;
+    const { to, data, value, network } = req.body;
 
     if (!isValidRecipient(to, network)) {
-      res.status(403).json({ msg: `I don't send transactions to ${to}` });
-      return;
+      return res
+        .status(403)
+        .json({ msg: `I don't send transactions to ${to}` });
     }
 
     const profit = await simulateTx(network, to, data, value);
     if (profit <= SURROGETH_MIN_TX_PROFIT) {
-      res.status(403).json({ msg: "Fee too low" });
-      return;
+      return res.status(403).json({ msg: "Fee too low" });
     }
 
     // TODO: Push nonce locking down to submission method and unit test it
-    lock
-      .acquire(nonceKey, async () => {
-        return sendTransaction(network, to, data, value);
-      })
-      .then(txResponse => {
-        res.json({
-          block: txResponse.blockNumber,
-          txHash: txResponse.hash
-        });
-      });
+    const { blockNumber, hash } = await lock.acquire(nonceKey, async () => {
+      return sendTransaction(network, to, data, value);
+    });
+
+    res.json({
+      block: blockNumber,
+      txHash: hash
+    });
   }
 );
 

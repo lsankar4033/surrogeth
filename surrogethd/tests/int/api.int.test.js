@@ -5,6 +5,7 @@ const SRC_PATH = "../../js";
 let app;
 beforeEach(() => {
   jest.mock(`${SRC_PATH}/eth/engines`);
+  jest.mock(`${SRC_PATH}/config`);
   app = require(`${SRC_PATH}/app`);
 });
 
@@ -68,14 +69,35 @@ describe("/fee", () => {
 // TODO: Tests for invalid query params
 describe("/submit_tx", () => {
   test("submits the tx properly based on query params", async () => {
-    // TODO
-  });
+    const {
+      TEST_ETHERS_TX,
+      TEST_NETWORK,
+      TEST_GAS_ESTIMATE,
+      TEST_GAS_PRICE,
+      TEST_TX_HASH,
+      TEST_BLOCK_NUM
+    } = require(`${SRC_PATH}/eth/engines`);
 
-  test("returns a 403 in the case of too low a profit", async () => {
-    // TODO
+    const response = await request(app)
+      .post("/submit_tx")
+      .type("json")
+      .send({
+        to: TEST_ETHERS_TX.to,
+        data: TEST_ETHERS_TX.data,
+        value: TEST_ETHERS_TX.value,
+        network: TEST_NETWORK
+      });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body["txHash"]).toBe(TEST_TX_HASH);
+    expect(response.body["block"]).toBe(TEST_BLOCK_NUM);
   });
 
   test("returns a 403 in the case of an invalid recipient", async () => {
+    // TODO
+  });
+
+  test("returns a 403 in case of too low of profit", async () => {
     // TODO
   });
 });

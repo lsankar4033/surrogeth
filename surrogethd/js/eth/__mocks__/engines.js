@@ -65,7 +65,7 @@ const TEST_ETHERS_TX = {
   from: relayerAccount.address
 };
 const NONCE = 2;
-const BLOCK_NUM = 23;
+const TEST_BLOCK_NUM = 23;
 const TEST_TX_HASH = "0x234";
 
 const getEthersProvider = network => {
@@ -87,17 +87,20 @@ const getEthersProvider = network => {
       return NONCE;
     },
 
-    getBlockNumber: () => BLOCK_NUM,
+    getBlockNumber: () => TEST_BLOCK_NUM,
 
     getBlock: blockNum => {
-      expect(blockNum).toBe(BLOCK_NUM);
+      expect(blockNum).toBe(TEST_BLOCK_NUM);
       return { gasLimit: GAS_LIMIT };
     },
 
     sendTransaction: signedTx => {
       expect(signedTx).toBe(SIGNED);
 
-      return TEST_TX_HASH;
+      return {
+        hash: TEST_TX_HASH,
+        blockNumber: TEST_BLOCK_NUM
+      };
     }
   };
 };
@@ -136,5 +139,6 @@ module.exports = {
   TEST_NETWORK,
   TEST_GAS_ESTIMATE,
   TEST_GAS_PRICE,
-  TEST_TX_HASH
+  TEST_TX_HASH,
+  TEST_BLOCK_NUM
 };
