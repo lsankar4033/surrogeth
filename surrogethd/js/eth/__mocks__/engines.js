@@ -5,7 +5,7 @@ const { relayerAccount } = require("../../utils");
 const SIGNED = "0x123";
 const INIT_RELAYER_BALANCE = 10000;
 const GAS_LIMIT = 100;
-const TEST_NETWORK = "FOO";
+const TEST_NETWORK = "LOCAL";
 
 const TEST_WEB3_TX = {
   to: "0x0000000000000000000000000000000000000001",
@@ -65,13 +65,9 @@ const TEST_ETHERS_TX = {
   from: relayerAccount.address
 };
 const NONCE = 2;
-const BLOCK_NUM = 23;
+const TEST_BLOCK_NUM = 23;
 const TEST_TX_HASH = "0x234";
 
-// .getTransactionCount (nonce)
-// .getBlockNumber
-// .getBlock
-// .sendTransaction (signed)
 const getEthersProvider = network => {
   expect(network).toBe(TEST_NETWORK);
 
@@ -91,17 +87,20 @@ const getEthersProvider = network => {
       return NONCE;
     },
 
-    getBlockNumber: () => BLOCK_NUM,
+    getBlockNumber: () => TEST_BLOCK_NUM,
 
     getBlock: blockNum => {
-      expect(blockNum).toBe(BLOCK_NUM);
+      expect(blockNum).toBe(TEST_BLOCK_NUM);
       return { gasLimit: GAS_LIMIT };
     },
 
     sendTransaction: signedTx => {
       expect(signedTx).toBe(SIGNED);
 
-      return TEST_TX_HASH;
+      return {
+        hash: TEST_TX_HASH,
+        blockNumber: TEST_BLOCK_NUM
+      };
     }
   };
 };
@@ -113,7 +112,6 @@ const ETHERS_FULL_TX = Object.assign({}, TEST_ETHERS_TX, {
 });
 delete ETHERS_FULL_TX.from;
 
-// .sign {to, value, data, nonce, gasLimit, gasPrice}
 const getEthersWallet = network => {
   expect(network).toBe(TEST_NETWORK);
 
@@ -126,14 +124,21 @@ const getEthersWallet = network => {
   };
 };
 
+const isValidRecipient = (recipient, network) => {
+  expect(network).toBe(TEST_NETWORK);
+  return recipient === TEST_ETHERS_TX.to || recipient === TEST_WEB3_TX.to;
+};
+
 module.exports = {
   createForkedWeb3,
   getEthersProvider,
   getEthersWallet,
+  isValidRecipient,
   TEST_WEB3_TX,
   TEST_ETHERS_TX,
   TEST_NETWORK,
   TEST_GAS_ESTIMATE,
   TEST_GAS_PRICE,
-  TEST_TX_HASH
+  TEST_TX_HASH,
+  TEST_BLOCK_NUM
 };

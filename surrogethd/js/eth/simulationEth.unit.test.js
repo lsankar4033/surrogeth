@@ -1,8 +1,9 @@
-describe("simulateTx", () => {
-  beforeEach(() => {
-    jest.mock("./engines");
-  });
+beforeEach(() => {
+  jest.mock("./engines");
+  jest.mock("../config");
+});
 
+describe("simulateTx", () => {
   test("properly computes profit of simulated tx", async () => {
     const { simulateTx } = require("./simulationEth");
     const { TEST_WEB3_TX, TEST_NETWORK } = require("./engines");

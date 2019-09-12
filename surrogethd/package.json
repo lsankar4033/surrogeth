@@ -5,7 +5,9 @@
   "main": "server.js",
   "scripts": {
     "start": "node js/server.js",
-    "test": "./node_modules/.bin/jest"
+    "test": "./node_modules/.bin/jest",
+    "test-unit": "./node_modules/.bin/jest unit",
+    "test-int": "./node_modules/.bin/jest int"
   },
   "author": "lsankar4033",
   "license": "ISC",
@@ -22,7 +24,9 @@
     "husky": "3.0.4",
     "jest": "24.9.0",
     "prettier": "1.18.2",
-    "pretty-quick": "1.11.1"
+    "pretty-quick": "1.11.1",
+    "superagent": "5.1.0",
+    "supertest": "4.0.2"
   },
   "husky": {
     "hooks": {

@@ -17,6 +17,9 @@ const networkToRpcUrl = network => {
     return KOVAN_RPC_URL;
   } else if (network === "MAINNET") {
     return MAINNET_RPC_URL;
+  } else if (network === "LOCAL") {
+    // TODO: Make this configurable!
+    return "http://127.0.0.1:7545";
   } else {
     throw `Network ${network} not recognized!`;
   }
@@ -46,8 +49,30 @@ const getEthersWallet = network => {
   return new ethers.Wallet(SURROGETH_PRIVATE_KEY, rpcUrl);
 };
 
+/**
+ * Determines if the specified recipient contract is allowed to receive relayed transactions from this node
+ */
+const isValidRecipient = (recipient, network) => {
+  if (network === "KOVAN") {
+    return (
+      KOVAN_ALLOWED_RECIPIENTS.length === 0 ||
+      KOVAN_ALLOWED_RECIPIENTS.includes(recipient)
+    );
+  } else if (network === "MAINNET") {
+    return (
+      MAINNET_ALLOWED_RECIPIENTS.length === 0 ||
+      MAINNET_ALLOWED_RECIPIENTS.includes(recipient)
+    );
+  } else if (network === "LOCAL") {
+    return true;
+  } else {
+    throw `Network ${network} not recognized!`;
+  }
+};
+
 module.exports = {
   createForkedWeb3,
   getEthersProvider,
-  getEthersWallet
+  getEthersWallet,
+  isValidRecipient
 };
