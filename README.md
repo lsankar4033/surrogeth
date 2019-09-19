@@ -9,8 +9,8 @@ It was originally built to support [MicroMix](https://micromix.app), but we're h
 
 Surrogeth consists of two components. Build instructions for each exist in its respective directory:
 
-| component | description |
-|---|---|
-| [surrogethd](https://github.com/lsankar4033/surrogeth/tree/master/surrogethd) | The surrogeth daemon, a node server that anyone can run to contribute to the Surrogeth network. |
-| [burnRegistry](https://github.com/lsankar4033/surrogeth/tree/master/burnRegistry) | A trustless discovery mechanism for Surrogeth nodes. |
-
+| component                                                                         | description                                                                                     |
+| --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| [surrogethd](https://github.com/lsankar4033/surrogeth/tree/master/surrogethd)     | The surrogeth daemon, a node server that anyone can run to contribute to the Surrogeth network. |
+| [burnRegistry](https://github.com/lsankar4033/surrogeth/tree/master/burnRegistry) | A trustless discovery mechanism for Surrogeth nodes.                                            |
+| [client](https://github.com/lsankar4033/surrogeth/tree/master/client)             | Client-side lib for integrating your app with Surrogeth.                                        |
