@@ -1,0 +1,14 @@
+{
+  "name": "surrogeth-client-example",
+  "version": "1.0.0",
+  "description": "Simple node server showing off surrogeth-client.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "lsankar4033",
+  "license": "ISC",
+  "dependencies": {
+    "express": "4.17.1"
+  }
+}

@@ -2,10 +2,18 @@
   "name": "surrogeth-client",
   "version": "0.1.0",
   "description": "Client package for integrating with the Surrogeth network.",
-  "main": "index.js",
+  "main": "client.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "npx prettier --write src/*",
+    "build:example": "browserify src/client.js -o example/public/js/client.js"
   },
   "license": "ISC",
-  "author": "lsankar4033"
+  "author": "lsankar4033",
+  "dependencies": {
+    "ethers": "4.0.37"
+  },
+  "devDependencies": {
+    "prettier": "1.18.2"
+  }
 }
