@@ -4,6 +4,7 @@
   "description": "Simple node server showing off surrogeth-client.",
   "main": "index.js",
   "scripts": {
+    "serve": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "lsankar4033",

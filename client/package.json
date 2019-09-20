@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "npx prettier --write src/*",
-    "build:example": "browserify src/client.js -o example/public/js/client.js"
+    "build:example": "browserify src/example.js -o example/public/js/example.js"
   },
   "license": "ISC",
   "author": "lsankar4033",
