@@ -30,7 +30,7 @@ class SurrogethClient {
    *
    * @returns {string} the IP address of the relayer found
    */
-  async nextRelayer() {
+  async nextBestRelayer() {
     const contract = new ethers.Contract(
       this.reputationAddress,
       reputationABI,
@@ -74,13 +74,17 @@ class SurrogethClient {
    * Submits the provided transaction to the provided relayer.
    *
    * @param tx transaction to submit
-   * @param {string} relayer relayer IP address to try
+   * @param {string} relayer IP address to try
    */
   async submitTxToRelayer(tx, relayer) {
-    // TODO
+    // TODO:
+    // - await axios.post to the address we care about
+    // - on response, return tx hash to sender
   }
 
-  // TODO: Multiple submit method
+  // TODO: Get fee (from relayer)
+
+  // TODO: Multiple submit method (gets fee as well)
 }
 
 module.exports = {

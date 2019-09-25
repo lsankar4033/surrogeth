@@ -2,12 +2,12 @@ const { SurrogethClient } = require("./client");
 
 jest.mock("ethers");
 
-describe("nextRelayer", () => {
+describe("nextBestRelayer", () => {
   test("returns null if no candidates", async () => {
     require("ethers").__setRelayers([], {});
 
     const client = new SurrogethClient();
-    const nextRelayer = await client.nextRelayer();
+    const nextRelayer = await client.nextBestRelayer();
 
     expect(nextRelayer).toBe(null);
   });
@@ -21,16 +21,16 @@ describe("nextRelayer", () => {
 
     const client = new SurrogethClient();
 
-    let nextRelayer = await client.nextRelayer();
+    let nextRelayer = await client.nextBestRelayer();
     expect(nextRelayer).toBe("2");
 
-    nextRelayer = await client.nextRelayer();
+    nextRelayer = await client.nextBestRelayer();
     expect(nextRelayer).toBe("1");
 
-    nextRelayer = await client.nextRelayer();
+    nextRelayer = await client.nextBestRelayer();
     expect(nextRelayer).toBe("3");
 
-    nextRelayer = await client.nextRelayer();
+    nextRelayer = await client.nextBestRelayer();
     expect(nextRelayer).toBe(null);
   });
 });
