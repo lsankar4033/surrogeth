@@ -4,9 +4,17 @@ const ethers = jest.genMockFromModule("ethers");
 let relayers = [];
 let relayerToLocator = {};
 let relayerToBurn = {};
-function __setRelayers(_relayers, _relayerToLocator, _relayerToBurn) {
+function __setRelayers(_relayers, _relayerToBurn) {
   relayers = _relayers;
-  relayerToLocator = _relayerToLocator;
+
+  relayerToLocator = {};
+  for (const relayer of relayers) {
+    relayerToLocator[relayer] = {
+      locator: String(relayer),
+      locatorType: "ip"
+    };
+  }
+
   relayerToBurn = _relayerToBurn;
 }
 

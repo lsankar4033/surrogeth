@@ -60,13 +60,13 @@ class SurrogethClient {
       })
     );
 
-    const sortedCandidates = _.sortBy(candidatesWithBurn, [({ burn }) => burn]);
-    const bestCandidate = sortedCandidates[-1];
+    const sortedCandidates = _.sortBy(candidatesWithBurn, ({ burn }) => burn);
+    const bestCandidate = sortedCandidates[sortedCandidates.length - 1];
 
-    // TODO: Only return a locator if its an IP!
-    const { locator, locatorType } = await contract.relayerToLocator(
-      bestCandidate.address
-    );
+    // TODO: Only return a locator if it has the proper locatorType
+    const { locator } = await contract.relayerToLocator(bestCandidate.address);
+
+    this.attemptedRelayerAddresses.add(bestCandidate.address);
     return locator;
   }
 
