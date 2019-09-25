@@ -1,0 +1,32 @@
+{
+  "name": "surrogeth-client",
+  "version": "0.1.0",
+  "description": "Client package for integrating with the Surrogeth network.",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "./node_modules/.bin/jest",
+    "test-unit": "./node_modules/.bin/jest unit",
+    "test-int": "./node_modules/.bin/jest int",
+    "lint": "npx prettier --write src/*",
+    "prepublishOnly": "npm test",
+    "build:example": "browserify src/example.js -o example/public/js/example.js"
+  },
+  "license": "ISC",
+  "author": "lsankar4033",
+  "dependencies": {
+    "axios": "0.19.0",
+    "ethers": "4.0.37",
+    "lodash": "4.17.15"
+  },
+  "devDependencies": {
+    "husky": "3.0.4",
+    "jest": "24.9.0",
+    "prettier": "1.18.2",
+    "pretty-quick": "1.11.1"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "pretty-quick --staged"
+    }
+  }
+}
