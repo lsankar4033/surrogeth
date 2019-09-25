@@ -2,12 +2,13 @@
   "name": "surrogeth-client",
   "version": "0.1.0",
   "description": "Client package for integrating with the Surrogeth network.",
-  "main": "client.js",
+  "main": "src/index.js",
   "scripts": {
     "test": "./node_modules/.bin/jest",
     "test-unit": "./node_modules/.bin/jest unit",
     "test-int": "./node_modules/.bin/jest int",
     "lint": "npx prettier --write src/*",
+    "prepublishOnly": "npm test",
     "build:example": "browserify src/example.js -o example/public/js/example.js"
   },
   "license": "ISC",
