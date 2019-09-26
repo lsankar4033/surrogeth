@@ -21,16 +21,15 @@ class SurrogethClient {
   ) {
     this.provider = provider;
     this.reputationAddress = reputationAddress;
-
-    this.attemptedRelayerAddresses = new Set([]);
   }
 
   /**
    * Determines the next relayer node to try and returns its IP address.
    *
+   * @param {Set} addressesToIgnore set of Ethereum addresses to not consider
    * @returns {string} the IP address of the relayer found
    */
-  async nextBestRelayer() {
+  async getBestRelayer(addressesToIgnore = new Set([])) {
     const contract = new ethers.Contract(
       this.reputationAddress,
       reputationABI,
@@ -43,7 +42,7 @@ class SurrogethClient {
     for (var relayerId = 1; relayerId < nextRelayerId; relayerId++) {
       const relayerAddress = await contract.relayerList(relayerId);
 
-      if (!this.attemptedRelayerAddresses.has(relayerAddress)) {
+      if (!addressesToIgnore.has(relayerAddress)) {
         candidates.push(relayerAddress);
       }
     }
@@ -66,7 +65,6 @@ class SurrogethClient {
     // TODO: Only return a locator if it has the proper locatorType
     const { locator } = await contract.relayerToLocator(bestCandidate.address);
 
-    this.attemptedRelayerAddresses.add(bestCandidate.address);
     return locator;
   }
 
