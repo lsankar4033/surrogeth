@@ -12,8 +12,8 @@ contract RelayerReputation {
 
     // Information that allows clients to find relayers on the web. i.e. via http or tor
     struct RelayerLocator {
-        string locator;     // i.e. Tor or HTTP address
-        string locatorType; // i.e. 'tor' or 'http'
+        string locator;     // i.e. Tor or IP address
+        string locatorType; // i.e. 'tor' or 'ip'
     }
     mapping(address => RelayerLocator) public relayerToLocator;
 

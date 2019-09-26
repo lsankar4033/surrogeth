@@ -4,24 +4,24 @@ const ethers = jest.genMockFromModule("ethers");
 let relayers = [];
 let relayerToLocator = {};
 let relayerToBurn = {};
-function __setRelayers(_relayers, _relayerToBurn) {
+function __setRelayers(_relayers, _locatorTypes, _burns) {
   relayers = _relayers;
 
   relayerToLocator = {};
-  for (const relayer of relayers) {
+  relayerToBurn = {};
+  for (const i in relayers) {
+    const relayer = relayers[i];
     relayerToLocator[relayer] = {
       locator: String(relayer),
-      locatorType: "ip"
+      locatorType: _locatorTypes[i]
     };
-  }
 
-  relayerToBurn = _relayerToBurn;
+    relayerToBurn[relayer] = _burns[i];
+  }
 }
 
 class Contract {
-  constructor(address, abi, provider) {
-    // TODO: make sure that address, abi, provider are as expected
-  }
+  constructor(address, abi, provider) {}
 
   async nextRelayer() {
     return {

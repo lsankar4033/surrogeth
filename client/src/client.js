@@ -8,7 +8,6 @@ const DEFAULT_REPUTATION_ADDRESSES = {
   KOVAN: "0xc5069F6E373Bf38b6bd55BDc3F6096B656aaC6c0"
 };
 
-// TODO: Add support for ERC20 reputation!
 /**
  * Class representing a single surrogeth client. Maintains state about which relayers it's already tried to
  * communicate with.
@@ -21,16 +20,18 @@ class SurrogethClient {
   ) {
     this.provider = provider;
     this.reputationAddress = reputationAddress;
-
-    this.attemptedRelayerAddresses = new Set([]);
   }
 
   /**
    * Determines the next relayer node to try and returns its IP address.
    *
+   * @param {Set} addressesToIgnore set of Ethereum addresses to not consider
    * @returns {string} the IP address of the relayer found
    */
-  async nextBestRelayer() {
+  async getBestRelayerIP(
+    addressesToIgnore = new Set([]),
+    allowedLocatorTypes = new Set(["ip"])
+  ) {
     const contract = new ethers.Contract(
       this.reputationAddress,
       reputationABI,
@@ -40,10 +41,12 @@ class SurrogethClient {
     const candidates = [];
 
     const nextRelayerId = (await contract.nextRelayer()).toNumber();
+
+    // TODO: batch these calls with multicall
     for (var relayerId = 1; relayerId < nextRelayerId; relayerId++) {
       const relayerAddress = await contract.relayerList(relayerId);
 
-      if (!this.attemptedRelayerAddresses.has(relayerAddress)) {
+      if (!addressesToIgnore.has(relayerAddress)) {
         candidates.push(relayerAddress);
       }
     }
@@ -53,6 +56,7 @@ class SurrogethClient {
       return null;
     }
 
+    // TODO: batch these calls with multicall
     const candidatesWithBurn = await Promise.all(
       _.map(candidates, async candidate => {
         const burn = await contract.relayerToBurn(candidate);
@@ -60,31 +64,24 @@ class SurrogethClient {
       })
     );
 
-    const sortedCandidates = _.sortBy(candidatesWithBurn, ({ burn }) => burn);
-    const bestCandidate = sortedCandidates[sortedCandidates.length - 1];
+    const sortedCandidates = _.sortBy(
+      candidatesWithBurn,
+      ({ burn }) => -1 * burn
+    );
 
-    // TODO: Only return a locator if it has the proper locatorType
-    const { locator } = await contract.relayerToLocator(bestCandidate.address);
+    // Iterate backwards through candidates until we hit one of an allowed locator type
+    for (const candidate of sortedCandidates) {
+      const { locator, locatorType } = await contract.relayerToLocator(
+        candidate.address
+      );
 
-    this.attemptedRelayerAddresses.add(bestCandidate.address);
-    return locator;
+      if (allowedLocatorTypes.has(locatorType)) {
+        return locator;
+      }
+    }
+
+    return null;
   }
-
-  /**
-   * Submits the provided transaction to the provided relayer.
-   *
-   * @param tx transaction to submit
-   * @param {string} relayer IP address to try
-   */
-  async submitTxToRelayer(tx, relayer) {
-    // TODO:
-    // - await axios.post to the address we care about
-    // - on response, return tx hash to sender
-  }
-
-  // TODO: Get fee (from relayer)
-
-  // TODO: Multiple submit method (gets fee as well)
 }
 
 module.exports = {
