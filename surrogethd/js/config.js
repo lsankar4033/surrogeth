@@ -3,6 +3,7 @@ require("dotenv").config();
 const envVars = [
   "KOVAN_RPC_URL",
   "MAINNET_RPC_URL",
+  "LOCAL_RPC_URL",
   "SURROGETH_PRIVATE_KEY",
   "SURROGETH_MIN_TX_PROFIT" // minimum profit per tx (in Wei) to consider submitting it
 ];
