@@ -9,6 +9,7 @@ const Web3 = require("web3");
 const {
   KOVAN_RPC_URL,
   MAINNET_RPC_URL,
+  LOCAL_RPC_URL,
   SURROGETH_PRIVATE_KEY
 } = require("../config");
 
@@ -18,8 +19,7 @@ const networkToRpcUrl = network => {
   } else if (network === "MAINNET") {
     return MAINNET_RPC_URL;
   } else if (network === "LOCAL") {
-    // TODO: Make this configurable!
-    return "http://127.0.0.1:7545";
+    return LOCAL_RPC_URL;
   } else {
     throw `Network ${network} not recognized!`;
   }
