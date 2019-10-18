@@ -24,11 +24,9 @@ class SurrogethClient {
 
   /**
    * Determines the next relayer node to try and returns its IP address.
-   *
-   * @param {Set} addressesToIgnore set of Ethereum addresses to not consider
-   * @returns {string} the IP address of the relayer found
    */
-  async getBestRelayerIP(
+  async getRelayers(
+    numRelayers = 1,
     addressesToIgnore = new Set([]),
     allowedLocatorTypes = new Set(["ip"])
   ) {
@@ -53,7 +51,7 @@ class SurrogethClient {
 
     // No registered relayers in the reputation contract!
     if (candidates.length === 0) {
-      return null;
+      return [];
     }
 
     // TODO: batch these calls with multicall
@@ -69,19 +67,28 @@ class SurrogethClient {
       ({ burn }) => -1 * burn
     );
 
-    // Iterate backwards through candidates until we hit one of an allowed locator type
+    // Iterate backwards through candidates until we hit 'numRelayers' of an allowed locator type
+    let toReturn = [];
     for (const candidate of sortedCandidates) {
       const { locator, locatorType } = await contract.relayerToLocator(
         candidate.address
       );
 
       if (allowedLocatorTypes.has(locatorType)) {
-        return locator;
+        toReturn.push({ locator, locatorType });
+      }
+
+      if (toReturn.length >= numRelayers) {
+        break;
       }
     }
 
-    return null;
+    return toReturn;
   }
+
+  // TODO: Submit to N relayers method
+
+  // TODO: default strategy method
 }
 
 module.exports = {

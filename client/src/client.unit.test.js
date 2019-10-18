@@ -2,14 +2,15 @@ const { SurrogethClient } = require("./client");
 
 jest.mock("ethers");
 
-describe("getBestRelayerIP", () => {
-  test("returns null if no candidates in contract", async () => {
+// TODO: Tests for N returned
+describe("getRelayers", () => {
+  test("returns an empty list if no candidates in contract", async () => {
     require("ethers").__setRelayers([], {});
 
     const client = new SurrogethClient();
-    const nextRelayer = await client.getBestRelayerIP();
+    const relayers = await client.getRelayers();
 
-    expect(nextRelayer).toBe(null);
+    expect(relayers).toStrictEqual([]);
   });
 
   test("returns the best relayer by burn", async () => {
@@ -21,8 +22,13 @@ describe("getBestRelayerIP", () => {
 
     const client = new SurrogethClient();
 
-    let nextRelayer = await client.getBestRelayerIP();
-    expect(nextRelayer).toBe("2");
+    let relayers = await client.getRelayers();
+    expect(relayers).toStrictEqual([
+      {
+        locator: "2",
+        locatorType: "ip"
+      }
+    ]);
   });
 
   test("ignores the specified addresses in figuring out which to return", async () => {
@@ -34,8 +40,13 @@ describe("getBestRelayerIP", () => {
 
     const client = new SurrogethClient();
 
-    let nextRelayer = await client.getBestRelayerIP(new Set([2]));
-    expect(nextRelayer).toBe("1");
+    let relayers = await client.getRelayers(1, new Set([2]));
+    expect(relayers).toStrictEqual([
+      {
+        locator: "1",
+        locatorType: "ip"
+      }
+    ]);
   });
 
   test("ignore locators that aren't allowed", async () => {
@@ -47,14 +58,16 @@ describe("getBestRelayerIP", () => {
 
     const client = new SurrogethClient();
 
-    let nextRelayer = await client.getBestRelayerIP(
-      new Set([]),
-      new Set(["tor"])
-    );
-    expect(nextRelayer).toBe("3");
+    let relayers = await client.getRelayers(1, new Set([]), new Set(["tor"]));
+    expect(relayers).toStrictEqual([
+      {
+        locator: "3",
+        locatorType: "tor"
+      }
+    ]);
   });
 
-  test("returns null if no relayers with the specified locator type", async () => {
+  test("returns an empty list if no relayers with the specified locator type", async () => {
     require("ethers").__setRelayers(
       [1, 2, 3],
       ["ip", "ip", "ip"],
@@ -63,10 +76,7 @@ describe("getBestRelayerIP", () => {
 
     const client = new SurrogethClient();
 
-    let nextRelayer = await client.getBestRelayerIP(
-      new Set([]),
-      new Set(["tor"])
-    );
-    expect(nextRelayer).toBe(null);
+    let relayers = await client.getRelayers(1, new Set([]), new Set(["tor"]));
+    expect(relayers).toStrictEqual([]);
   });
 });
