@@ -1,11 +1,23 @@
+const axios = require("axios");
 const ethers = require("ethers");
 const _ = require("lodash/core");
 
 const { reputationABI } = require("./abi");
 
-// TODO: populate once I deploy
+// TODO: populate once I deploy the registry
 const DEFAULT_REPUTATION_ADDRESSES = {
   KOVAN: "0xc5069F6E373Bf38b6bd55BDc3F6096B656aaC6c0"
+};
+
+// NOTE: We may want this to be an arg in the future
+const DEFAULT_RELAYER_BATCH_SIZE = 10;
+
+const getFeeRoute = (locator, to, data, value, network) => {
+  return `${locator}/fee?to=${to}&data=${data}&value=${value}&network=${network}`;
+};
+
+const getSubmitTxRoute = locator => {
+  return `${locator}/submit_tx`;
 };
 
 /**
@@ -15,11 +27,14 @@ const DEFAULT_REPUTATION_ADDRESSES = {
 class SurrogethClient {
   constructor(
     provider,
+    maxFeeWei = -1, // Default will use min fee specified by each relayer
     network = "KOVAN",
     reputationAddress = DEFAULT_REPUTATION_ADDRESSES[network]
   ) {
+    this.network = network;
     this.provider = provider;
     this.reputationAddress = reputationAddress;
+    this.maxFeeWei = maxFeeWei;
   }
 
   /**
@@ -86,9 +101,72 @@ class SurrogethClient {
     return toReturn;
   }
 
-  // TODO: Submit to N relayers method
+  // NOTE: returns tx hash | null
+  async submitTxToRelayers(feeToTxFn, relayers) {
+    // TODO: parallelization
+    for (const { locator, locatorType } of relayers) {
+      // TODO: tor communication
+      if (locatorType === "ip") {
+        // NOTE: is this exactly what we want? We may need to document this extensively
+        const getFeeTx = feeToTxFn(0);
+        const resp = await axios.get(
+          getFeeRoute(
+            locator,
+            getFeeTx.to,
+            getFeeTx.data,
+            getFeeTx.value,
+            this.network
+          )
+        );
 
-  // TODO: default strategy method
+        if (resp.status === 200) {
+          const relayerFee = resp.data["fee"];
+
+          if (this.maxFeeWei == -1 || this.maxFeeWei > relayerFee) {
+            const { to, data, value } = feeToTxFn(relayerFee);
+            const resp = await axios.post(getSubmitTxRoute(locator), {
+              to,
+              data,
+              value,
+              network: this.network
+            });
+
+            if (resp.status === 200) {
+              return resp.data.hash;
+            } else {
+              // TODO: error propagation?
+            }
+          }
+        } else {
+          // TODO: error propagation?
+        }
+      }
+    }
+
+    // NOTE: may want to return list of errors accumulated
+    return null;
+  }
+
+  // NOTE: returns tx hash | null
+  async submitTx(feeToTxFn) {
+    const attemptedRelayerAddresses = new Set([]);
+    let relayers = [];
+
+    do {
+      relayers = this.getRelayers(
+        DEFAULT_RELAYER_BATCH_SIZE,
+        attemptedRelayerAddresses,
+        new Set(["ip"])
+      );
+      const ret = await this.submitTxToRelayers(feeToTxFn, relayers);
+
+      if (ret !== null) {
+        return ret;
+      }
+    } while (relayers.length > 0);
+
+    return null;
+  }
 }
 
 module.exports = {
