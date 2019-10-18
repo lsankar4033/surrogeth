@@ -79,4 +79,26 @@ describe("getRelayers", () => {
     let relayers = await client.getRelayers(1, new Set([]), new Set(["tor"]));
     expect(relayers).toStrictEqual([]);
   });
+
+  test("returns multiple relayers if more than 1 is asked for", async () => {
+    require("ethers").__setRelayers(
+      [1, 2, 3],
+      ["tor", "ip", "ip"],
+      [100, 300, 90]
+    );
+
+    const client = new SurrogethClient();
+
+    let relayers = await client.getRelayers(2);
+    expect(relayers).toStrictEqual([
+      {
+        locator: "2",
+        locatorType: "ip"
+      },
+      {
+        locator: "1",
+        locatorType: "tor"
+      }
+    ]);
+  });
 });

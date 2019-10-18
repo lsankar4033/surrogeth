@@ -23,12 +23,12 @@ class SurrogethClient {
   }
 
   /**
-   * Determines the next relayer node to try and returns its IP address.
+   * Returns the next relayers to try
    */
   async getRelayers(
     numRelayers = 1,
     addressesToIgnore = new Set([]),
-    allowedLocatorTypes = new Set(["ip"])
+    allowedLocatorTypes = new Set(["ip", "tor"])
   ) {
     const contract = new ethers.Contract(
       this.reputationAddress,
