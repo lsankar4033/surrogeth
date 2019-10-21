@@ -12,8 +12,8 @@ const DEFAULT_REPUTATION_ADDRESSES = {
 // NOTE: We may want this to be an arg in the future
 const DEFAULT_RELAYER_BATCH_SIZE = 10;
 
-const getFeeRoute = (locator, to, data, value, network) => {
-  return `${locator}/fee?to=${to}&data=${data}&value=${value}&network=${network}`;
+const getFeeRoute = locator => {
+  return `${locator}/fee`;
 };
 
 const getSubmitTxRoute = locator => {
@@ -38,7 +38,14 @@ class SurrogethClient {
   }
 
   /**
-   * Returns the next relayers to try
+   * Get the highest reputation relayers from the reputation contract.
+   *
+   * @param {number} numRelayers - The number of relayers to return.
+   * @param {Set<string>} addressesToIgnore - Any relayer addresses to skip over.
+   * @param {Set<string>} allowedLocatorTypes - The locator types to include.
+   *
+   * @returns {Array<{locator: string, locatorType: string, burn: number, address: string}>} An array of
+   * information objects corresponding to relayers
    */
   async getRelayers(
     numRelayers = 1,
@@ -85,12 +92,11 @@ class SurrogethClient {
     // Iterate backwards through candidates until we hit 'numRelayers' of an allowed locator type
     let toReturn = [];
     for (const candidate of sortedCandidates) {
-      const { locator, locatorType } = await contract.relayerToLocator(
-        candidate.address
-      );
+      const { address, burn } = candidate;
+      const { locator, locatorType } = await contract.relayerToLocator(address);
 
       if (allowedLocatorTypes.has(locatorType)) {
-        toReturn.push({ locator, locatorType, address: candidate.address });
+        toReturn.push({ locator, locatorType, address, burn });
       }
 
       if (toReturn.length >= numRelayers) {
@@ -101,72 +107,70 @@ class SurrogethClient {
     return toReturn;
   }
 
-  // TODO: paralellization
-  async submitTxToRelayers(txBuilderFn, relayers) {
-    for (const { address, locator, locatorType } of relayers) {
-      if (locatorType === "ip") {
-        // NOTE: is this exactly what we want? We may need to document this extensively
-        const getFeeTx = feeToTxFn(0);
-        const resp = await axios.get(
-          getFeeRoute(
-            locator,
-            getFeeTx.to,
-            getFeeTx.data,
-            getFeeTx.value,
-            this.network
-          )
-        );
+  /**
+   * Returns the fee for the specified relayer.
+   *
+   * @param {{locator: string, locatorType: string}} relayer - The relayer whose fee to return, as specified
+   * by a locator (i.e. IP address) and locatorType string (i.e. 'ip')
+   *
+   * @returns {number|null} The fee in Wei advertised by the specified relayer.
+   */
+  async getRelayerFee(relayer) {
+    const { locator, locatorType } = relayer;
 
-        if (resp.status === 200) {
-          const relayerFee = resp.data["fee"];
-
-          if (this.maxFeeWei == -1 || this.maxFeeWei > relayerFee) {
-            const { to, data, value } = txBuilderFn(address, relayerFee);
-            const resp = await axios.post(getSubmitTxRoute(locator), {
-              to,
-              data,
-              value,
-              network: this.network
-            });
-
-            if (resp.status === 200) {
-              return resp.data.hash;
-            } else {
-              console.log(
-                `${resp.status} error submitting tx to relayer ${locator}`
-              );
-            }
-          }
-        } else {
-          console.log(
-            `${resp.status} error retrieving fee from relayer ${locator}`
-          );
-        }
-      }
+    if (locatorType !== "ip") {
+      console.log(
+        `Can't communicate with relayer at ${locator} of locatorType ${locatorType} because only IP supported right now.`
+      );
+      return null;
     }
 
-    return null;
+    const resp = await axios.get(getFeeRoute(locator));
+
+    if (resp.statusCode !== 200) {
+      console.log(
+        `${resp.status} error retrieving fee from relayer ${locator}`
+      );
+      return null;
+    }
+
+    return resp.data["fee"];
   }
 
-  // NOTE: returns tx hash | null
-  async submitTx(txBuilderFn) {
-    const attemptedRelayerAddresses = new Set([]);
-    let relayers = [];
+  /**
+   * Submit the specified transaction to the specified relayer.
+   *
+   * @param {{locator: string, locatorType: string}} relayer - The relayer whose fee to return, as specified
+   * by a locator (i.e. IP address) and locatorType string (i.e. 'ip')
+   * @param {{to: string, data: string, value: number}} tx - The transaction info to submit. 'to' is a hex string
+   * representing the address to send to and 'data' is a hex string or an empty string representing the data
+   * payload of the transaction
+   *
+   * @returns {string|null} The transaction hash of the submitted transaction
+   */
+  async submitTx(tx, relayer) {
+    const { locator, locatorType } = relayer;
+    const { to, data, value } = tx;
 
-    do {
-      relayers = this.getRelayers(
-        DEFAULT_RELAYER_BATCH_SIZE,
-        attemptedRelayerAddresses,
-        new Set(["ip"])
+    if (locatorType !== "ip") {
+      console.log(
+        `Can't communicate with relayer at ${locator} of locatorType ${locatorType} because only IP supported right now.`
       );
-      const ret = await this.submitTxToRelayers(txBuilderFn, relayers);
+      return null;
+    }
 
-      if (ret !== null) {
-        return ret;
-      }
-    } while (relayers.length > 0);
+    const resp = await axios.post(getSubmitTxRoute(locator), {
+      to,
+      data,
+      value,
+      network: this.network
+    });
 
-    return null;
+    if (resp.statusCode != 200) {
+      console.log(`${resp.status} error submitting tx to relayer ${locator}`);
+    }
+
+    return resp.data.hash;
   }
 }
 

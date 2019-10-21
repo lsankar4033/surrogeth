@@ -26,7 +26,8 @@ describe("getRelayers", () => {
       {
         address: 2,
         locator: "2",
-        locatorType: "ip"
+        locatorType: "ip",
+        burn: 300
       }
     ]);
   });
@@ -45,7 +46,8 @@ describe("getRelayers", () => {
       {
         address: 1,
         locator: "1",
-        locatorType: "ip"
+        locatorType: "ip",
+        burn: 100
       }
     ]);
   });
@@ -64,7 +66,8 @@ describe("getRelayers", () => {
       {
         address: 3,
         locator: "3",
-        locatorType: "tor"
+        locatorType: "tor",
+        burn: 90
       }
     ]);
   });
@@ -96,12 +99,14 @@ describe("getRelayers", () => {
       {
         address: 2,
         locator: "2",
-        locatorType: "ip"
+        locatorType: "ip",
+        burn: 300
       },
       {
         address: 1,
         locator: "1",
-        locatorType: "tor"
+        locatorType: "tor",
+        burn: 100
       }
     ]);
   });
