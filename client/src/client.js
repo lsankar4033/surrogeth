@@ -27,14 +27,12 @@ const getSubmitTxRoute = locator => {
 class SurrogethClient {
   constructor(
     provider,
-    maxFeeWei = -1, // Default will use min fee specified by each relayer
     network = "KOVAN",
     reputationAddress = DEFAULT_REPUTATION_ADDRESSES[network]
   ) {
     this.network = network;
     this.provider = provider;
     this.reputationAddress = reputationAddress;
-    this.maxFeeWei = maxFeeWei;
   }
 
   /**
