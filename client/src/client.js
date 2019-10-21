@@ -90,7 +90,7 @@ class SurrogethClient {
       );
 
       if (allowedLocatorTypes.has(locatorType)) {
-        toReturn.push({ locator, locatorType });
+        toReturn.push({ locator, locatorType, address: candidate.address });
       }
 
       if (toReturn.length >= numRelayers) {
