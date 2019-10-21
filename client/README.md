@@ -33,3 +33,5 @@ if (relayers.length > 0) {
   const txHash = await client.submitTx(tx, relayers[0]);
 }
 ```
+
+For more, see [documentation](https://lsankar4033.github.io/surrogeth/SurrogethClient.html).
