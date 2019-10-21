@@ -101,11 +101,9 @@ class SurrogethClient {
     return toReturn;
   }
 
-  // NOTE: returns tx hash | null
-  async submitTxToRelayers(feeToTxFn, relayers) {
-    // TODO: parallelization
-    for (const { locator, locatorType } of relayers) {
-      // TODO: tor communication
+  // TODO: paralellization
+  async submitTxToRelayers(txBuilderFn, relayers) {
+    for (const { address, locator, locatorType } of relayers) {
       if (locatorType === "ip") {
         // NOTE: is this exactly what we want? We may need to document this extensively
         const getFeeTx = feeToTxFn(0);
@@ -123,7 +121,7 @@ class SurrogethClient {
           const relayerFee = resp.data["fee"];
 
           if (this.maxFeeWei == -1 || this.maxFeeWei > relayerFee) {
-            const { to, data, value } = feeToTxFn(relayerFee);
+            const { to, data, value } = txBuilderFn(address, relayerFee);
             const resp = await axios.post(getSubmitTxRoute(locator), {
               to,
               data,
@@ -134,21 +132,24 @@ class SurrogethClient {
             if (resp.status === 200) {
               return resp.data.hash;
             } else {
-              // TODO: error propagation?
+              console.log(
+                `${resp.status} error submitting tx to relayer ${locator}`
+              );
             }
           }
         } else {
-          // TODO: error propagation?
+          console.log(
+            `${resp.status} error retrieving fee from relayer ${locator}`
+          );
         }
       }
     }
 
-    // NOTE: may want to return list of errors accumulated
     return null;
   }
 
   // NOTE: returns tx hash | null
-  async submitTx(feeToTxFn) {
+  async submitTx(txBuilderFn) {
     const attemptedRelayerAddresses = new Set([]);
     let relayers = [];
 
@@ -158,7 +159,7 @@ class SurrogethClient {
         attemptedRelayerAddresses,
         new Set(["ip"])
       );
-      const ret = await this.submitTxToRelayers(feeToTxFn, relayers);
+      const ret = await this.submitTxToRelayers(txBuilderFn, relayers);
 
       if (ret !== null) {
         return ret;
