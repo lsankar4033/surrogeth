@@ -3,6 +3,9 @@ const { check, validationResult } = require("express-validator");
 
 const AsyncLock = require("async-lock");
 
+// Configure console logging statements
+require("console-stamp")(console);
+
 const {
   relayerAccount,
   isTxDataStr,
@@ -28,10 +31,12 @@ const app = express();
 app.use(express.json());
 
 app.get("/address", (req, res) => {
+  console.info("Serving address request");
   res.json({ address: relayerAccount.address });
 });
 
 app.get("/fee", async (req, res) => {
+  console.info("Serving fee request");
   res.json({ fee: SURROGETH_FEE });
 });
 
@@ -52,6 +57,10 @@ app.post(
     }
     const { to, data, value, network } = req.body;
 
+    console.info(
+      `Serving tx submission request: to: ${to}, value: ${value}, network: ${network}, data: ${network}`
+    );
+
     if (!isValidRecipient(to, network)) {
       return res
         .status(403)
@@ -60,12 +69,10 @@ app.post(
 
     const profit = await simulateTx(network, to, data, value);
     if (profit <= SURROGETH_MIN_TX_PROFIT) {
-      return res
-        .status(403)
-        .json({
-          msg: `Fee too low! Try increasing the fee by ${SURROGETH_MIN_TX_PROFIT -
-            profit} Wei`
-        });
+      return res.status(403).json({
+        msg: `Fee too low! Try increasing the fee by ${SURROGETH_MIN_TX_PROFIT -
+          profit} Wei`
+      });
     }
 
     // TODO: Push nonce locking down to submission method and unit test it
