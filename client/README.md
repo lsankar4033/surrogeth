@@ -28,7 +28,8 @@ const relayers = await client.getRelayers(
 if (relayers.length > 0) {
   const fee = await client.getRelayerFee(relayers[0]);
 
-  // ... construct transaction using fee -> tx: {to, data, value}
+  // ... construct transaction using fee -> tx: {to, data, value}. If this tx is to be used in the burn
+  // registry, it *must* be sent to the deployed RelayerForwarder contract
 
   const txHash = await client.submitTx(tx, relayers[0]);
 }
