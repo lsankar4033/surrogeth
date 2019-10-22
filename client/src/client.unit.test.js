@@ -2,7 +2,6 @@ const { SurrogethClient } = require("./client");
 
 jest.mock("ethers");
 
-// TODO: Tests for N returned
 describe("getRelayers", () => {
   test("returns an empty list if no candidates in contract", async () => {
     require("ethers").__setRelayers([], {});
@@ -25,8 +24,10 @@ describe("getRelayers", () => {
     let relayers = await client.getRelayers();
     expect(relayers).toStrictEqual([
       {
+        address: 2,
         locator: "2",
-        locatorType: "ip"
+        locatorType: "ip",
+        burn: 300
       }
     ]);
   });
@@ -43,8 +44,10 @@ describe("getRelayers", () => {
     let relayers = await client.getRelayers(1, new Set([2]));
     expect(relayers).toStrictEqual([
       {
+        address: 1,
         locator: "1",
-        locatorType: "ip"
+        locatorType: "ip",
+        burn: 100
       }
     ]);
   });
@@ -61,8 +64,10 @@ describe("getRelayers", () => {
     let relayers = await client.getRelayers(1, new Set([]), new Set(["tor"]));
     expect(relayers).toStrictEqual([
       {
+        address: 3,
         locator: "3",
-        locatorType: "tor"
+        locatorType: "tor",
+        burn: 90
       }
     ]);
   });
@@ -92,12 +97,16 @@ describe("getRelayers", () => {
     let relayers = await client.getRelayers(2);
     expect(relayers).toStrictEqual([
       {
+        address: 2,
         locator: "2",
-        locatorType: "ip"
+        locatorType: "ip",
+        burn: 300
       },
       {
+        address: 1,
         locator: "1",
-        locatorType: "tor"
+        locatorType: "tor",
+        burn: 100
       }
     ]);
   });

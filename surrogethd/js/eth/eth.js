@@ -7,7 +7,7 @@ const { SURROGETH_MIN_TX_PROFIT } = require("../config");
 const { relayerAccount } = require("../utils");
 
 /**
- * Gets the fee that this relayer will quote for the provided tx.
+ * @deprecated Gets the fee that this relayer will quote for the provided tx.
  */
 const getFee = async (network, to, data, value) => {
   const { address } = relayerAccount;

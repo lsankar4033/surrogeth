@@ -13,8 +13,26 @@ npm install surrogeth-client
 ```javascript
 import { SurrogethClient } from "surrogeth-client";
 
-const relayerIP = await client.getBestRelayerIP();
-// Interact with relayer running surrogethd
+const client = new SurrogethClient(
+  ethersJsProvider,
+  network, // "KOVAN" || "MAINNET"
+  reputationContractAddress // defaults to current deployment on specified network
+);
+
+const relayers = await client.getRelayers(
+  1,
+  new Set([]), // don't ignore any addresses
+  new Set(["ip"]) // only return relayers with an IP address
+);
+
+if (relayers.length > 0) {
+  const fee = await client.getRelayerFee(relayers[0]);
+
+  // ... construct transaction using fee -> tx: {to, data, value}. If this tx is to be used in the burn
+  // registry, it *must* be sent to the deployed RelayerForwarder contract
+
+  const txHash = await client.submitTx(tx, relayers[0]);
+}
 ```
 
-For a working VueJS app using surrogeth-client, check out the [example app](https://github.com/lsankar4033/surrogeth/tree/master/client/example).
+For more, see [documentation](https://lsankar4033.github.io/surrogeth/SurrogethClient.html).
