@@ -5,7 +5,7 @@ const _ = require("lodash/core");
 const { reputationABI } = require("./abi");
 
 const DEFAULT_REPUTATION_ADDRESSES = {
-  KOVAN: "0x7c3F546E0224B469cca5454aF450515b2034F3fD"
+  KOVAN: "0x90cD6Abb6683FcB9Da915454cC49F3fa4cb0a5b1"
 };
 
 // NOTE: We may want this to be an arg in the future
