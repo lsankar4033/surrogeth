@@ -4,9 +4,8 @@ const _ = require("lodash/core");
 
 const { reputationABI } = require("./abi");
 
-// TODO: populate once I deploy the registry
 const DEFAULT_REPUTATION_ADDRESSES = {
-  KOVAN: "0xc5069F6E373Bf38b6bd55BDc3F6096B656aaC6c0"
+  KOVAN: "0x7c3F546E0224B469cca5454aF450515b2034F3fD"
 };
 
 // NOTE: We may want this to be an arg in the future
