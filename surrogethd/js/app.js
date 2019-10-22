@@ -1,4 +1,6 @@
 const express = require("express");
+const cors = require("cors");
+
 const { check, validationResult } = require("express-validator");
 
 const AsyncLock = require("async-lock");
@@ -24,6 +26,7 @@ const lock = new AsyncLock();
 const nonceKey = `nonce_${relayerAccount.address}`;
 
 const app = express();
+app.use(cors());
 app.use(express.json());
 
 app.get("/address", (req, res) => {
