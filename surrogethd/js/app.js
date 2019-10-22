@@ -61,7 +61,7 @@ app.post(
     const { to, data, value, network } = req.body;
 
     console.info(
-      `Serving tx submission request: to: ${to}, value: ${value}, network: ${network}, data: ${network}`
+      `Serving tx submission request: to: ${to}, value: ${value}, network: ${network}, data: ${data}`
     );
 
     if (!isValidRecipient(to, network)) {

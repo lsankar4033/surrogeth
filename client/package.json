@@ -1,6 +1,6 @@
 {
   "name": "surrogeth-client",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Client package for integrating with the Surrogeth network.",
   "main": "src/index.js",
   "scripts": {
