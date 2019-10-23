@@ -163,7 +163,7 @@ class SurrogethClient {
       network: this.network
     });
 
-    if (resp.statusCode != 200) {
+    if (resp.status !== 200) {
       console.log(`${resp.status} error submitting tx to relayer ${locator}`);
     }
 

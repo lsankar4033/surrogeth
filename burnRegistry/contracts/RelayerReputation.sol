@@ -1,4 +1,4 @@
-pragma solidity 0.5.10;
+pragma solidity ^0.5.10;
 
 contract RelayerReputation {
     event RelayerAdded(address indexed _relayer);

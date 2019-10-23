@@ -1,5 +1,5 @@
 pragma experimental ABIEncoderV2;
-pragma solidity 0.5.10;
+pragma solidity ^0.5.10;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
