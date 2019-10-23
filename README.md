@@ -7,7 +7,7 @@ It was originally built to support [MicroMix](https://micromix.app), but we're h
 
 ## Contents
 
-Surrogeth consists of two components. Build instructions for each exist in its respective directory:
+Surrogeth consists of three components. Build instructions for each exist in its respective directory:
 
 | component                                                                         | description                                                                                     |
 | --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
