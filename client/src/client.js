@@ -167,7 +167,7 @@ class SurrogethClient {
       console.log(`${resp.status} error submitting tx to relayer ${locator}`);
     }
 
-    return resp.data.hash;
+    return resp.data.txHash;
   }
 }
 
