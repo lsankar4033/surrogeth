@@ -31,6 +31,7 @@ const nonceKey = `nonce_${relayerAccount.address}`;
 
 const app = express();
 app.use(cors());
+app.options("*", cors());
 app.use(express.json());
 
 app.get("/address", (req, res) => {
