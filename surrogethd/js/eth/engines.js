@@ -10,7 +10,9 @@ const {
   KOVAN_RPC_URL,
   MAINNET_RPC_URL,
   LOCAL_RPC_URL,
-  SURROGETH_PRIVATE_KEY
+  SURROGETH_PRIVATE_KEY,
+  KOVAN_ALLOWED_RECIPIENTS,
+  MAINNET_ALLOWED_RECIPIENTS
 } = require("../config");
 
 const networkToRpcUrl = network => {
