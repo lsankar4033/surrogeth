@@ -82,8 +82,12 @@ app.post(
         .json({ msg: `I don't send transactions to ${to}` });
     }
 
+    // simulate the transaction
     const profit = await simulateTx(network, to, data, value);
-    if (profit <= SURROGETH_MIN_TX_PROFIT) {
+
+    // only check whether the profit is sufficient if SURROGETH_MIN_TX_PROFIT
+    // is set to a positive value
+    if (SURROGETH_MIN_TX_PROFIT > 0 && profit <= SURROGETH_MIN_TX_PROFIT) {
       return res.status(403).json({
         msg: `Fee too low! Try increasing the fee by ${SURROGETH_MIN_TX_PROFIT -
           profit} Wei`
