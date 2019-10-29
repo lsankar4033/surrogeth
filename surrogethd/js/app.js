@@ -68,6 +68,7 @@ app.post(
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.info("Invalid parameters on tx submission request");
       return res.status(422).json({ errors: errors.array() });
     }
     const { to, data, value, network } = req.body;
