@@ -1,14 +1,15 @@
 <template>
   <div class="hello">
-    <h1>{{ msg }}</h1>
+    <h1>Relayer:</h1>
     <p>
-      {{ this.surrogethClient }}
+      {{ this.relayer }}
     </p>
   </div>
 </template>
 
 <script>
 import { SurrogethClient } from "surrogeth-client";
+import { ethers } from "ethers";
 
 export default {
   name: "HelloWorld",
@@ -18,8 +19,27 @@ export default {
 
   data() {
     return {
-      surrogethClient: SurrogethClient
+      surrogethClient: SurrogethClient,
+      relayer: null
     };
+  },
+
+  async created() {
+    const provider = new ethers.providers.InfuraProvider(
+      "kovan",
+      "https://kovan.infura.io/v3/85fe482e0db94cbeb9020e7173a481f7"
+    );
+    const client = new SurrogethClient(
+      provider,
+      "KOVAN",
+      "0x90cD6Abb6683FcB9Da915454cC49F3fa4cb0a5b1"
+    );
+
+    const relayers = await client.getRelayers(1, new Set([]), new Set(["ip"]));
+    this.relayer = relayers[0];
+
+    // NOTE: expect failure
+    await client.submitTx({}, relayers[0]);
   }
 };
 </script>
