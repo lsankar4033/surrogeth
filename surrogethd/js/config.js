@@ -1,6 +1,7 @@
 require("dotenv").config();
 
 const envVars = [
+  "PORT",
   "KOVAN_RPC_URL",
   "MAINNET_RPC_URL",
   "LOCAL_RPC_URL",

@@ -1,1 +1,1 @@
-web: cd surrogethd && npm run start
+web: npm run start --prefix surrogethd
