@@ -16,7 +16,8 @@ import { SurrogethClient } from "surrogeth-client";
 const client = new SurrogethClient(
   ethersJsProvider,
   network, // "KOVAN" || "MAINNET"
-  reputationContractAddress // defaults to current deployment on specified network
+  reputationContractAddress, // defaults to current deployment on specified network
+  protocol // "https" || "http"
 );
 
 const relayers = await client.getRelayers(

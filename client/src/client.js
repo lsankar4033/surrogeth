@@ -27,7 +27,8 @@ class SurrogethClient {
   constructor(
     provider,
     network = "KOVAN",
-    reputationAddress = DEFAULT_REPUTATION_ADDRESSES[network]
+    reputationAddress = DEFAULT_REPUTATION_ADDRESSES[network],
+    protocol = "https"
   ) {
     this.network = network;
     this.provider = provider;
@@ -122,7 +123,7 @@ class SurrogethClient {
       return null;
     }
 
-    const resp = await axios.get(getFeeRoute(locator));
+    const resp = await axios.get(`${protocol}//${getFeeRoute(locator)}`);
 
     if (resp.statusCode !== 200) {
       console.log(
@@ -156,7 +157,7 @@ class SurrogethClient {
       return null;
     }
 
-    const resp = await axios.post(getSubmitTxRoute(locator), {
+    const resp = await axios.post(`${protocol}//${getSubmitTxRoute(locator)}`, {
       to,
       data,
       value,
