@@ -32,11 +32,14 @@ export default {
     const client = new SurrogethClient(
       provider,
       "KOVAN",
-      "0x90cD6Abb6683FcB9Da915454cC49F3fa4cb0a5b1"
+      "0x90cD6Abb6683FcB9Da915454cC49F3fa4cb0a5b1",
+      "https"
     );
 
     const relayers = await client.getRelayers(1, new Set([]), new Set(["ip"]));
     this.relayer = relayers[0];
+
+    console.log(this.relayer);
 
     // NOTE: expect failure
     await client.submitTx({}, relayers[0]);
