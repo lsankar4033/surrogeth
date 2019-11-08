@@ -124,7 +124,7 @@ class SurrogethClient {
       return null;
     }
 
-    const resp = await axios.get(`${this.protocol}//${getFeeRoute(locator)}`);
+    const resp = await axios.get(`${this.protocol}://${getFeeRoute(locator)}`);
 
     if (resp.statusCode !== 200) {
       console.log(
@@ -159,7 +159,7 @@ class SurrogethClient {
     }
 
     const resp = await axios.post(
-      `${this.protocol}//${getSubmitTxRoute(locator)}`,
+      `${this.protocol}://${getSubmitTxRoute(locator)}`,
       {
         to,
         data,
