@@ -6,9 +6,16 @@ const envVars = [
   "MAINNET_RPC_URL",
   "LOCAL_RPC_URL",
   "SURROGETH_PRIVATE_KEY",
-  "SURROGETH_FEE", // default fee (in Wei) broadcast by this relayer
-  "SURROGETH_MIN_TX_PROFIT" // minimum profit per tx (in Wei) to consider submitting it. should be notably higher
+
+  // default fee (in Wei) broadcast by this relayer
+  "SURROGETH_FEE",
+
+  // minimum profit per tx (in Wei) to consider submitting it. should be notably higher
   // than SURROGETH_FEE
+  "SURROGETH_MIN_TX_PROFIT",
+  // minimum profit per ERC20 tx (in smallest token unites) to consider
+  // submitting it. should be notably higher than SURROGETH_FEE
+  "SURROGETH_ERC20_MIN_TX_PROFIT"
 ];
 
 const arrayEnvVars = ["KOVAN_ALLOWED_RECIPIENTS", "MAINNET_ALLOWED_RECIPIENTS"];
