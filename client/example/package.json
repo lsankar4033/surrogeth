@@ -10,7 +10,7 @@
   "dependencies": {
     "core-js": "^2.6.5",
     "ethers": "4.0.38",
-    "surrogeth-client": "0.3.4",
+    "surrogeth-client": "0.3.7",
     "vue": "^2.6.10"
   },
   "devDependencies": {
