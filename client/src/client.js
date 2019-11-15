@@ -19,6 +19,10 @@ const getSubmitTxRoute = locator => {
   return `${locator}/submit_tx`;
 };
 
+const getSubmitErc20TxRoute = locator => {
+  return `${locator}/submit_erc20_tx`;
+};
+
 /**
  * Class representing a single surrogeth client. Maintains state about which relayers it's already tried to
  * communicate with.
@@ -134,6 +138,47 @@ class SurrogethClient {
     }
 
     return resp.data["fee"];
+  }
+
+  /**
+   * Submit the specified transaction to the specified relayer, where the transaction may reward the relayer with ERC20 
+   * tokens (instead of ETH, which is what submitTx is for.
+   *
+   * @param {{locator: string, locatorType: string}} relayer - The relayer whose fee to return, as specified
+   * by a locator (i.e. IP address) and locatorType string (i.e. 'ip')
+   * @param {{to: string, data: string, value: number}} tx - The transaction info to submit. 'to' is a hex string
+   * representing the address to send to and 'data' is a hex string or an empty string representing the data
+   * payload of the transaction
+   *
+   * @returns {string|null} The transaction hash of the submitted transaction
+   */
+  async submitERC20Tx(tx, relayer) {
+    const { locator, locatorType } = relayer;
+    const { token, to, data, value } = tx;
+
+    if (locatorType !== "ip") {
+      console.log(
+        `Can't communicate with relayer at ${locator} of locatorType ${locatorType} because only IP supported right now.`
+      );
+      return null;
+    }
+
+    const resp = await axios.post(
+      `${this.protocol}://${getSubmitErc20TxRoute(locator)}`,
+      {
+        token,
+        to,
+        data,
+        value,
+        network: this.network
+      }
+    );
+
+    if (resp.status !== 200) {
+      console.log(`${resp.status} error submitting tx to relayer ${locator}`);
+    }
+
+    return resp.data.txHash;
   }
 
   /**
