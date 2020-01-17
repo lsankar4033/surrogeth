@@ -13,13 +13,14 @@
   "license": "ISC",
   "dependencies": {
     "async-lock": "1.2.2",
-    "cors": "^2.8.5",
     "console-stamp": "3.0.0-rc2.0",
+    "cors": "^2.8.5",
     "dotenv": "8.0.0",
     "ethers": "4.0.33",
     "express": "4.17.1",
     "express-validator": "6.1.1",
     "ganache-core": "2.6.1",
+    "handlebars": "4.7.2",
     "web3": "1.2.1"
   },
   "devDependencies": {
