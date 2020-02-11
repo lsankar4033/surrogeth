@@ -2,12 +2,10 @@ pragma solidity ^0.5.10;
 
 contract RelayerReputation {
     event RelayerAdded(address indexed _relayer);
-    event ReputationUpdated(address indexed _relayer, uint256 _burnValue);
+    event RelayLogged(address indexed _relayer);
 
     address public forwarderAddress;
 
-    // 'Reputation' maps
-    mapping(address => uint256) public relayerToBurn;
     mapping(address => uint256) public relayerToRelayCount;
 
     // Information that allows clients to find relayers on the web. i.e. via http or tor
@@ -17,7 +15,7 @@ contract RelayerReputation {
     }
     mapping(address => RelayerLocator) public relayerToLocator;
 
-    // Clients can enumerate relayerList using nextRelayer and then reference relayerToBurn and
+    // Clients can enumerate relayerList using nextRelayer and then reference
     // relayerToRelayCount to determine wnich relayer(s) to use
     mapping(uint256 => address) public relayerList;
     uint256 public nextRelayer = 1;
@@ -45,7 +43,9 @@ contract RelayerReputation {
 
     /**
      * Updates the locator for the specified relayer address. Can only be called from that address (to prevent
-     * anyone from griefing a relayer by changing its locator).
+     * anyone from griefing a relayer by changing its locator). Frontrunners can use this method to broadcast
+     * a locator on which they can be reached.
+     *
      * @param _relayer The relayer whose locator to update
      * @param _locator The new locator to set
      * @param _locatorType The locator type to use
@@ -68,15 +68,13 @@ contract RelayerReputation {
      * seeing the specified relayer, also adds the relayer to relevant lists.
      *
      * @param _relayer The relayer whose reputation to update
-     * @param _burnValue The amount of wei burned by the specified relayer
      */
-    function updateReputation(address _relayer, uint256 _burnValue) external onlyForwarder {
+    function logRelay(address _relayer) external onlyForwarder {
         if (!_seenRelayers[_relayer]) {
             _addRelayer(_relayer);
         }
 
-        relayerToBurn[_relayer] += _burnValue;
         relayerToRelayCount[_relayer] += 1;
-        emit ReputationUpdated(_relayer, _burnValue);
+        emit RelayLogged(_relayer);
     }
 }
