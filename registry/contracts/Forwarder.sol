@@ -13,6 +13,8 @@ contract Forwarder is Ownable {
 
     constructor() public {}
 
+    function () external payable {}
+
     function _relayCall(
         address _applicationContract,
         bytes memory _encodedPayload
@@ -31,11 +33,6 @@ contract Forwarder is Ownable {
 
         return fee;
     }
-
-    /**
-     * Enables sending Ether to this contract
-     */
-    function () external payable {}
 
     /**
      * Sets the reputation contract.
