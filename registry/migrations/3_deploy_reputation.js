@@ -1,13 +1,13 @@
-const RelayerReputation = artifacts.require("RelayerReputation");
-const RelayerForwarder = artifacts.require("RelayerForwarder");
+const Registry = artifacts.require("Registry");
+const Forwarder = artifacts.require("Forwarder");
 
 module.exports = deployer => {
   deployer
-    .deploy(RelayerReputation, RelayerForwarder.address)
+    .deploy(Registry, Forwarder.address)
     .then(() => {
-      return RelayerForwarder.deployed();
+      return Forwarder.deployed();
     })
     .then(forwarder => {
-      forwarder.setReputation(RelayerReputation.address);
+      forwarder.setReputation(Registry.address);
     });
 };

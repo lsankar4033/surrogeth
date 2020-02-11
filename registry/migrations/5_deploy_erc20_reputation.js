@@ -1,13 +1,13 @@
-const ERC20RelayerReputation = artifacts.require("ERC20RelayerReputation");
-const ERC20RelayerForwarder = artifacts.require("ERC20RelayerForwarder");
+const ERC20Registry = artifacts.require("ERC20Registry");
+const ERC20Forwarder = artifacts.require("ERC20Forwarder");
 
 module.exports = deployer => {
   deployer
-    .deploy(ERC20RelayerReputation, ERC20RelayerForwarder.address)
+    .deploy(ERC20Registry, ERC20Forwarder.address)
     .then(() => {
-      return ERC20RelayerForwarder.deployed();
+      return ERC20Forwarder.deployed();
     })
     .then(forwarder => {
-      forwarder.setReputation(ERC20RelayerReputation.address);
+      forwarder.setReputation(ERC20Registry.address);
     });
 };

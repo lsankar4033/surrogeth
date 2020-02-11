@@ -1,14 +1,11 @@
 const { expectRevert } = require("openzeppelin-test-helpers");
 
-const RelayerReputation = artifacts.require("RelayerReputation");
-const RelayerForwarder = artifacts.require("RelayerForwarder");
+const Registry = artifacts.require("Registry");
+const Forwarder = artifacts.require("Forwarder");
 
 const TestApplication = artifacts.require("TestApplication");
 
-// TODO:
-// - test that can't call relayCall or burnRelayCall from another contract
-
-contract("RelayerForwarder", accounts => {
+contract("Forwarder", accounts => {
   const nullAddress = "0x0000000000000000000000000000000000000000";
   const owner = accounts[0];
 
@@ -25,7 +22,7 @@ contract("RelayerForwarder", accounts => {
   let noFeePayload;
 
   beforeEach(async () => {
-    forwarderContract = await RelayerForwarder.new(burnNum, burnDenom, {
+    forwarderContract = await Forwarder.new(burnNum, burnDenom, {
       from: owner
     });
 
@@ -42,7 +39,7 @@ contract("RelayerForwarder", accounts => {
         forwarderContract.relayCall(applicationContract.address, feePayload, {
           from: accounts[0]
         }),
-        "RelayerForwarder: reputation contract must be set to relay calls"
+        "Forwarder: reputation contract must be set to relay calls"
       );
     });
 
@@ -50,9 +47,7 @@ contract("RelayerForwarder", accounts => {
       let reputationContract;
 
       beforeEach(async () => {
-        reputationContract = await RelayerReputation.new(
-          forwarderContract.address
-        );
+        reputationContract = await Registry.new(forwarderContract.address);
         await forwarderContract.setReputation(reputationContract.address, {
           from: owner
         });
@@ -127,9 +122,7 @@ contract("RelayerForwarder", accounts => {
 
   describe("batchRelayCall", () => {
     it("relays call to each specified application contract", async () => {
-      let reputationContract = await RelayerReputation.new(
-        forwarderContract.address
-      );
+      let reputationContract = await Registry.new(forwarderContract.address);
       await forwarderContract.setReputation(reputationContract.address, {
         from: owner
       });
@@ -168,9 +161,7 @@ contract("RelayerForwarder", accounts => {
 
   describe("burn", () => {
     it("sends all of the registry's balance to the burn address", async () => {
-      let reputationContract = await RelayerReputation.new(
-        forwarderContract.address
-      );
+      let reputationContract = await Registry.new(forwarderContract.address);
       await forwarderContract.setReputation(reputationContract.address, {
         from: owner
       });

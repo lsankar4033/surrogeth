@@ -4,12 +4,12 @@ pragma solidity ^0.5.10;
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
-import "./RelayerReputation.sol";
+import "./Registry.sol";
 
-contract RelayerForwarder is Ownable {
+contract Forwarder is Ownable {
     using SafeMath for uint256;
 
-    RelayerReputation public reputation;
+    Registry public reputation;
 
     struct Fraction {
         uint256 numerator;
@@ -25,7 +25,7 @@ contract RelayerForwarder is Ownable {
         // feePlusBurn calculated by the increase in balance of this contract
         uint256 prevBalance = address(this).balance;
         (bool success,) = _applicationContract.call(_encodedPayload);
-        require(success, "RelayerForwarder: failure calling application contract");
+        require(success, "Forwarder: failure calling application contract");
         uint256 finalBalance = address(this).balance;
 
         if (finalBalance > prevBalance) {
@@ -48,9 +48,9 @@ contract RelayerForwarder is Ownable {
      * @param _reputationAddress The address of the reputation contract to set.
      */
     function setReputation(address _reputationAddress) external onlyOwner {
-        require(address(reputation) == address(0), "RelayerForwarder: Can only set the reputation contract once");
+        require(address(reputation) == address(0), "Forwarder: Can only set the reputation contract once");
 
-        reputation = RelayerReputation(_reputationAddress);
+        reputation = Registry(_reputationAddress);
     }
 
     /**
@@ -65,9 +65,9 @@ contract RelayerForwarder is Ownable {
         address _applicationContract,
         bytes calldata _encodedPayload
     ) external {
-        require(address(reputation) != address(0), "RelayerForwarder: reputation contract must be set to relay calls");
+        require(address(reputation) != address(0), "Forwarder: reputation contract must be set to relay calls");
 
-        require(tx.origin == msg.sender, "RelayerForwarder: cannot relay calls from another contract");
+        require(tx.origin == msg.sender, "Forwarder: cannot relay calls from another contract");
 
         uint256 fee = _relayCall(_applicationContract, _encodedPayload);
 
@@ -89,13 +89,13 @@ contract RelayerForwarder is Ownable {
         address[] calldata _applicationContracts,
         bytes[] calldata _encodedPayloads
     ) external {
-        require(address(reputation) != address(0), "RelayerForwarder: reputation contract must be set to relay calls");
+        require(address(reputation) != address(0), "Forwarder: reputation contract must be set to relay calls");
 
-        require(tx.origin == msg.sender, "RelayerForwarder: cannot relay calls from another contract");
+        require(tx.origin == msg.sender, "Forwarder: cannot relay calls from another contract");
 
         require(
             _applicationContracts.length == _encodedPayloads.length,
-            "RelayerForwarder: must send an equal number of application contracts and encoded payloads"
+            "Forwarder: must send an equal number of application contracts and encoded payloads"
         );
 
         address payable relayer = msg.sender;

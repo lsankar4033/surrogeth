@@ -1,8 +1,8 @@
 const TestApplication = artifacts.require("TestApplication");
-const RelayerForwarder = artifacts.require("RelayerForwarder");
+const Forwarder = artifacts.require("Forwarder");
 
 module.exports = async () => {
-  const forwarder = await RelayerForwarder.deployed();
+  const forwarder = await Forwarder.deployed();
   const application = await TestApplication.deployed();
 
   const feePayload = await application.feePayload();

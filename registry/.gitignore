@@ -7,3 +7,5 @@ watch_config.json
 
 .eslintrc.js
 .jshintrc
+
+*.bak

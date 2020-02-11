@@ -5,17 +5,17 @@ import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 
-import "./ERC20RelayerReputation.sol";
+import "./ERC20Registry.sol";
 
 // TODO: update and remove burn
-contract ERC20RelayerForwarder is Ownable {
+contract ERC20Forwarder is Ownable {
     using SafeMath for uint256;
 
     address payable constant burnAddress = address(0);
 
     Fraction public burnFraction; // NOTE: represents the fraction of fee used as burn. Currently is the same
                                   // *for all* ERC20 tokens
-    ERC20RelayerReputation public reputation;
+    ERC20Registry public reputation;
 
     struct Fraction {
         uint256 numerator;
@@ -85,7 +85,7 @@ contract ERC20RelayerForwarder is Ownable {
      * @param _reputationAddress The address of the reputation contract to set.
      */
     function setReputation(address _reputationAddress) external onlyOwner {
-        reputation = ERC20RelayerReputation(_reputationAddress);
+        reputation = ERC20Registry(_reputationAddress);
     }
 
     /**

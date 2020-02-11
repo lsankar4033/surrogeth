@@ -7,4 +7,4 @@ Think of it as a low-touch reputation system. It's the direct evolution of the i
 
 The `RelayerReputation` and `ERC20RelayerReputation` contracts keep track of reputation for relayers identified by [locator](https://github.com/lsankar4033/surrogeth/blob/master/burnRegistry/contracts/RelayerReputation.sol#L14).
 
-The `RelayerForwarder` and `ERC20RelayerForwarder` are dapp-agnostic forwarder contracts that interact with downstream dapps and update their corresponding `Reputation` contracts based on what surrogeth relayers burn.
+The `Forwarder` and `ERC20Forwarder` are dapp-agnostic forwarder contracts that interact with downstream dapps and update their corresponding `Reputation` contracts based on what surrogeth relayers burn.
