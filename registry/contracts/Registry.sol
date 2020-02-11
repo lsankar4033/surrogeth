@@ -1,29 +1,46 @@
 pragma solidity ^0.5.10;
 
 contract Registry {
-    event RelayerAdded(address indexed _relayer);
-    event RelayLogged(address indexed _relayer);
-
     address public forwarderAddress;
 
-    mapping(address => uint256) public relayerToRelayCount;
+    event RelayLogged(address indexed _relayer);
+    event RelayerLocatorSet(address indexed _relayer);
 
-    // Information that allows clients to find relayers on the web. i.e. via http or tor
+    /**
+     * Information that allows clients to reach a relayer. Not all relayers here will have a locator
+     */
     struct RelayerLocator {
         string locator;     // i.e. Tor or IP address
         string locatorType; // i.e. 'tor' or 'ip'
     }
     mapping(address => RelayerLocator) public relayerToLocator;
 
-    // Clients can enumerate relayerList using nextRelayer and then reference
-    // relayerToRelayCount to determine wnich relayer(s) to use
-    mapping(uint256 => address) public relayerList;
-    uint256 public nextRelayer = 1;
+    /**
+     * Dynamic list of relayers. Client code is expected to use these lists to enumerate relayers or check for
+     * their presence.
+     */
+    struct Relayers {
+        uint256 count;
+        mapping(uint256 => address) list;  // for enumeration
+        mapping(address => bool) set;      // for checking membership
+    }
 
-    mapping(address => bool) private _seenRelayers;
+    Relayers public allRelayers;
+    Relayers public locatorRelayers; // i.e. relayers with a locator. expected to be a subset of allRelayers
+
+    mapping(address => uint256) public relayerToRelayCount;
 
     constructor(address _forwarderAddress) public {
         forwarderAddress = _forwarderAddress;
+    }
+
+    function _attemptAddRelayer(address _relayer, Relayers storage _relayers) internal {
+        // Don't do anything if the relayer's already been added
+        if (!_relayers.set[_relayer]) {
+            _relayers.set[_relayer] = true;
+            _relayers.count += 1;
+            _relayers.list[_relayers.count] = _relayer;
+        }
     }
 
     /**
@@ -32,13 +49,6 @@ contract Registry {
     modifier onlyForwarder() {
         require(msg.sender == forwarderAddress, "Registry: caller is not the forwarder");
         _;
-    }
-
-    function _addRelayer(address _relayer) internal {
-        relayerList[nextRelayer] = _relayer;
-        nextRelayer += 1;
-        _seenRelayers[_relayer] = true;
-        emit RelayerAdded(_relayer);
     }
 
     /**
@@ -53,14 +63,15 @@ contract Registry {
     function setRelayerLocator(address _relayer, string calldata _locator, string calldata _locatorType) external {
         require(_relayer == msg.sender, "Registry: can only set the locator for self");
 
-        if (!_seenRelayers[_relayer]) {
-            _addRelayer(_relayer);
-        }
+        _attemptAddRelayer(_relayer, allRelayers);
+        _attemptAddRelayer(_relayer, locatorRelayers);
 
         relayerToLocator[_relayer] = RelayerLocator(
             _locator,
             _locatorType
         );
+
+        emit RelayerLocatorSet(_relayer);
     }
 
     /**
@@ -70,11 +81,10 @@ contract Registry {
      * @param _relayer The relayer whose reputation to update
      */
     function logRelay(address _relayer) external onlyForwarder {
-        if (!_seenRelayers[_relayer]) {
-            _addRelayer(_relayer);
-        }
+        _attemptAddRelayer(_relayer, allRelayers);
 
         relayerToRelayCount[_relayer] += 1;
+
         emit RelayLogged(_relayer);
     }
 }
