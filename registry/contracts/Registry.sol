@@ -6,6 +6,10 @@ contract Registry {
     event RelayLogged(address indexed _relayer);
     event RelayerLocatorSet(address indexed _relayer);
 
+    constructor(address _forwarderAddress) public {
+        forwarderAddress = _forwarderAddress;
+    }
+
     /**
      * Information that allows clients to reach a relayer. Not all relayers here will have a locator
      */
@@ -14,6 +18,8 @@ contract Registry {
         string locatorType; // i.e. 'tor' or 'ip'
     }
     mapping(address => RelayerLocator) public relayerToLocator;
+
+    mapping(address => uint256) public relayerToRelayCount;
 
     /**
      * Dynamic list of relayers. Client code is expected to use these lists to enumerate relayers or check for
@@ -24,31 +30,54 @@ contract Registry {
         mapping(uint256 => address) list;  // for enumeration
         mapping(address => bool) set;      // for checking membership
     }
+    enum RelayersType {
+        All,
+        WithLocator
+    }
 
     Relayers public allRelayers;
     Relayers public locatorRelayers; // i.e. relayers with a locator. expected to be a subset of allRelayers
 
-    mapping(address => uint256) public relayerToRelayCount;
-
-    constructor(address _forwarderAddress) public {
-        forwarderAddress = _forwarderAddress;
-    }
-
-    function _attemptAddRelayer(address _relayer, Relayers storage _relayers) internal {
-        // Don't do anything if the relayer's already been added
-        if (!_relayers.set[_relayer]) {
-            _relayers.set[_relayer] = true;
-            _relayers.count += 1;
-            _relayers.list[_relayers.count] = _relayer;
+    function _getRelayers(RelayersType _type) internal view returns (Relayers storage) {
+        if (_type == RelayersType.WithLocator) {
+            return locatorRelayers;
+        } else {
+            return allRelayers;
         }
     }
 
     /**
-     * Throws if called by any account other than the forwarder.
+     * Getter for num relayers of a given RelayersType
      */
-    modifier onlyForwarder() {
-        require(msg.sender == forwarderAddress, "Registry: caller is not the forwarder");
-        _;
+    function relayersCount(RelayersType _type) external view returns (uint256) {
+        Relayers storage relayers = _getRelayers(_type);
+        return relayers.count;
+    }
+
+    /**
+     * Getter for relayer address by index of a given RelayersType.
+     */
+    function relayerByIdx(RelayersType _type, uint256 _idx) external view returns (address) {
+        Relayers storage relayers = _getRelayers(_type);
+        return relayers.list[_idx];
+    }
+
+    /**
+     * Getter for existence boolean of relayer address of a given RelayersType
+     */
+    function relayerExists(RelayersType _type, address _relayer) external view returns (bool) {
+        Relayers storage relayers = _getRelayers(_type);
+        return relayers.set[_relayer];
+    }
+
+    function _attemptAddRelayer(RelayersType _type, address _relayer) internal {
+        Relayers storage relayers = _getRelayers(_type);
+        // Don't do anything if the relayer's already been added
+        if (!relayers.set[_relayer]) {
+            relayers.set[_relayer] = true;
+            relayers.list[relayers.count] = _relayer;
+            relayers.count += 1;
+        }
     }
 
     /**
@@ -63,8 +92,8 @@ contract Registry {
     function setRelayerLocator(address _relayer, string calldata _locator, string calldata _locatorType) external {
         require(_relayer == msg.sender, "Registry: can only set the locator for self");
 
-        _attemptAddRelayer(_relayer, allRelayers);
-        _attemptAddRelayer(_relayer, locatorRelayers);
+        _attemptAddRelayer(RelayersType.All, _relayer);
+        _attemptAddRelayer(RelayersType.WithLocator, _relayer);
 
         relayerToLocator[_relayer] = RelayerLocator(
             _locator,
@@ -75,13 +104,21 @@ contract Registry {
     }
 
     /**
+     * Throws if called by any account other than the forwarder.
+     */
+    modifier onlyForwarder() {
+        require(msg.sender == forwarderAddress, "Registry: caller is not the forwarder");
+        _;
+    }
+
+    /**
      * Updates reputation maps for the specified relayer and burn value. If this is the first time we're
      * seeing the specified relayer, also adds the relayer to relevant lists.
      *
      * @param _relayer The relayer whose reputation to update
      */
     function logRelay(address _relayer) external onlyForwarder {
-        _attemptAddRelayer(_relayer, allRelayers);
+        _attemptAddRelayer(RelayersType.All, _relayer);
 
         relayerToRelayCount[_relayer] += 1;
 
