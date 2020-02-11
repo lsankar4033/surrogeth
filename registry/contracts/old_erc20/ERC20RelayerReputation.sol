@@ -1,5 +1,6 @@
 pragma solidity ^0.5.10;
 
+// TODO: update and remove burn
 contract ERC20RelayerReputation {
     event RelayerAdded(address indexed _relayer);
     event RelayerTokenPairAdded(address indexed _relayer, address _erc20);

@@ -7,6 +7,7 @@ import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 
 import "./ERC20RelayerReputation.sol";
 
+// TODO: update and remove burn
 contract ERC20RelayerForwarder is Ownable {
     using SafeMath for uint256;
 
