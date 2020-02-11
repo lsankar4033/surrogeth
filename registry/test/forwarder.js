@@ -1,19 +1,22 @@
 const { expectRevert } = require("openzeppelin-test-helpers");
 
-const Registry = artifacts.require("Registry");
 const Forwarder = artifacts.require("Forwarder");
 
+const TestRegistry = artifacts.require("TestRegistry");
 const TestApplication = artifacts.require("TestApplication");
+
+const getGasCost = async txReceipt => {
+  const tx = await web3.eth.getTransaction(txReceipt.tx);
+  const gasPrice = tx.gasPrice;
+  return parseInt(gasPrice) * txReceipt.receipt.gasUsed;
+};
 
 contract("Forwarder", accounts => {
   const nullAddress = "0x0000000000000000000000000000000000000000";
   const owner = accounts[0];
 
-  const burnNum = 10;
-  const burnDenom = 100;
-
-  const applicationFunding = 100;
-  const applicationFee = 10;
+  const applicationFunding = 100000000;
+  const applicationFee = 100000;
 
   let forwarderContract;
 
@@ -22,9 +25,7 @@ contract("Forwarder", accounts => {
   let noFeePayload;
 
   beforeEach(async () => {
-    forwarderContract = await Forwarder.new(burnNum, burnDenom, {
-      from: owner
-    });
+    forwarderContract = await Forwarder.new({ from: owner });
 
     applicationContract = await TestApplication.new(applicationFee);
     applicationContract.send(applicationFunding, { from: accounts[0] }); // NOTE: Fund application contract
@@ -44,11 +45,11 @@ contract("Forwarder", accounts => {
     });
 
     describe("with reputation", () => {
-      let reputationContract;
+      let registryContract;
 
       beforeEach(async () => {
-        reputationContract = await Registry.new(forwarderContract.address);
-        await forwarderContract.setReputation(reputationContract.address, {
+        registryContract = await TestRegistry.new();
+        await forwarderContract.setReputation(registryContract.address, {
           from: owner
         });
       });
@@ -67,121 +68,36 @@ contract("Forwarder", accounts => {
           assert.equal(value.toNumber(), 5);
         });
 
-        // NOTE: This assumes that the reputation contract works as expected
-        it("updates reputation with 0 burn", async () => {
-          let nextRelayer = await reputationContract.nextRelayer();
-          assert.equal(nextRelayer.toNumber(), 2);
+        it("logs relay", async () => {
+          let curIdx = await registryContract.curIdx();
+          assert.equal(curIdx.toNumber(), 1);
 
-          let firstRelayer = await reputationContract.relayerList(1);
-          assert.equal(firstRelayer, accounts[0]);
-          let secondRelayer = await reputationContract.relayerList(2);
-          assert.equal(secondRelayer, nullAddress);
-
-          let burn = await reputationContract.relayerToBurn(accounts[0]);
-          assert.equal(burn.toNumber(), 0);
-
-          let count = await reputationContract.relayerToRelayCount(accounts[0]);
-          assert.equal(count.toNumber(), 1);
+          let loggedRelayer = await registryContract.idxToRelayer(0);
+          assert.equal(loggedRelayer, accounts[0]);
         });
       });
 
       describe("with fee", () => {
         let prevRelayerBalance;
+        let txReceipt;
 
         beforeEach(async () => {
           prevRelayerBalance = await web3.eth.getBalance(accounts[0]);
-          await forwarderContract.relayCall(
+          txReceipt = await forwarderContract.relayCall(
             applicationContract.address,
             feePayload,
             { from: accounts[0] }
           );
         });
 
-        it("updates reputation appropriately and stores burned eth in forwarder", async () => {
-          let nextRelayer = await reputationContract.nextRelayer();
-          assert.equal(nextRelayer.toNumber(), 2);
+        it("pays relayer", async () => {
+          let curRelayerBalance = await web3.eth.getBalance(accounts[0]);
+          let txGasCost = await getGasCost(txReceipt);
 
-          let firstRelayer = await reputationContract.relayerList(1);
-          assert.equal(firstRelayer, accounts[0]);
-
-          let expectedBurn = (burnNum * applicationFee) / burnDenom;
-          let burn = await reputationContract.relayerToBurn(accounts[0]);
-          assert.equal(burn.toNumber(), expectedBurn);
-
-          let forwarderBalance = await web3.eth.getBalance(
-            forwarderContract.address
-          );
-          assert.equal(forwarderBalance, expectedBurn);
-
-          let count = await reputationContract.relayerToRelayCount(accounts[0]);
-          assert.equal(count.toNumber(), 1);
+          // TODO: exact testing here
+          assert.isAbove(txGasCost, prevRelayerBalance - curRelayerBalance);
         });
       });
-    });
-  });
-
-  describe("batchRelayCall", () => {
-    it("relays call to each specified application contract", async () => {
-      let reputationContract = await Registry.new(forwarderContract.address);
-      await forwarderContract.setReputation(reputationContract.address, {
-        from: owner
-      });
-
-      let applicationContract2 = await TestApplication.new(applicationFee);
-      applicationContract2.send(applicationFunding, { from: accounts[0] }); // NOTE: Fund application contract
-
-      // NOTE: fee on one, no fee on the other
-      await forwarderContract.batchRelayCall(
-        [applicationContract.address, applicationContract2.address],
-        [noFeePayload, feePayload],
-        { from: accounts[0] }
-      );
-
-      let value = await applicationContract.value();
-      assert.equal(value.toNumber(), 5);
-      let value2 = await applicationContract2.value();
-      assert.equal(value2.toNumber(), 5);
-
-      let firstRelayer = await reputationContract.relayerList(1);
-      assert.equal(firstRelayer, accounts[0]);
-
-      let count = await reputationContract.relayerToRelayCount(accounts[0]);
-      assert.equal(count.toNumber(), 2);
-
-      let expectedBurn = (burnNum * applicationFee) / burnDenom;
-      let burn = await reputationContract.relayerToBurn(accounts[0]);
-      assert.equal(burn.toNumber(), expectedBurn);
-
-      let forwarderBalance = await web3.eth.getBalance(
-        forwarderContract.address
-      );
-      assert.equal(forwarderBalance, expectedBurn);
-    });
-  });
-
-  describe("burn", () => {
-    it("sends all of the registry's balance to the burn address", async () => {
-      let reputationContract = await Registry.new(forwarderContract.address);
-      await forwarderContract.setReputation(reputationContract.address, {
-        from: owner
-      });
-
-      await forwarderContract.relayCall(
-        applicationContract.address,
-        feePayload,
-        { from: accounts[0] }
-      );
-
-      let initNullBalance = await web3.eth.getBalance(nullAddress);
-
-      await forwarderContract.burnBalance();
-      forwarderBalance = await web3.eth.getBalance(forwarderContract.address);
-      assert.equal(forwarderBalance, 0);
-
-      let finalNullBalance = await web3.eth.getBalance(nullAddress);
-
-      // NOTE: why can't we know this value *exactly*?
-      assert.isTrue(finalNullBalance > initNullBalance);
     });
   });
 });
