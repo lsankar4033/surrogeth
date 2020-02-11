@@ -11,18 +11,13 @@ contract Forwarder is Ownable {
 
     Registry public reputation;
 
-    struct Fraction {
-        uint256 numerator;
-        uint256 denominator;
-    }
-
     constructor() public {}
 
     function _relayCall(
         address _applicationContract,
         bytes memory _encodedPayload
     ) internal returns (uint256 fee) {
-        // feePlusBurn calculated by the increase in balance of this contract
+        // fee calculated by the increase in balance of this contract
         uint256 prevBalance = address(this).balance;
         (bool success,) = _applicationContract.call(_encodedPayload);
         require(success, "Forwarder: failure calling application contract");
