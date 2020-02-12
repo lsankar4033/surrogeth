@@ -67,7 +67,7 @@ contract Forwarder is Ownable {
         if (fee > 0) {
             relayer.transfer(fee);
         }
-        reputation.logRelay(relayer);
+        reputation.logRelay(relayer, fee);
     }
 
     /**
@@ -96,7 +96,7 @@ contract Forwarder is Ownable {
             uint256 fee = _relayCall(_applicationContracts[i], _encodedPayloads[i]);
 
             totalRelayerFee += fee;
-            reputation.logRelay(relayer);
+            reputation.logRelay(relayer, fee);
         }
 
         relayer.transfer(totalRelayerFee);
