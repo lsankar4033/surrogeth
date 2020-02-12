@@ -19,6 +19,7 @@ contract Registry {
     }
     mapping(address => RelayerLocator) public relayerToLocator;
 
+    // TODO: add relayerToAvgFee?
     mapping(address => uint256) public relayerToRelayCount;
 
     /**
@@ -35,7 +36,10 @@ contract Registry {
         WithLocator
     }
 
+    // TODO: rename to 'relayers'. To contrast with 'broadcasters'
     Relayers public allRelayers;
+
+    // TODO: rename to 'broadcasters'
     Relayers public locatorRelayers; // i.e. relayers with a locator. expected to be a subset of allRelayers
 
     function _getRelayers(RelayersType _type) internal view returns (Relayers storage) {
