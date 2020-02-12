@@ -2,14 +2,16 @@ const axios = require("axios");
 const ethers = require("ethers");
 const _ = require("lodash/core");
 
-const { reputationABI } = require("./abi");
+const { registryABI } = require("./abi");
 
-const DEFAULT_REPUTATION_ADDRESSES = {
-  KOVAN: "0x90cD6Abb6683FcB9Da915454cC49F3fa4cb0a5b1"
-};
+// TODO!
+const DEFAULT_REGISTRY_ADDRESS = {};
 
 // NOTE: We may want this to be an arg in the future
 const DEFAULT_RELAYER_BATCH_SIZE = 10;
+
+// As defined in the Registry.sol contract
+const LOCATOR_RELAYERS_TYPE = 1;
 
 const getFeeRoute = locator => {
   return `${locator}/fee`;
@@ -31,75 +33,59 @@ class SurrogethClient {
   constructor(
     provider,
     network = "KOVAN",
-    reputationAddress = DEFAULT_REPUTATION_ADDRESSES[network],
+    registryAddress = DEFAULT_REGISTRY_ADDRESS[network],
     protocol = "https"
   ) {
     this.network = network;
     this.provider = provider;
-    this.reputationAddress = reputationAddress;
+    this.registryAddress = registryAddress;
     this.protocol = protocol;
   }
 
   /**
-   * Get the highest reputation relayers from the reputation contract.
+   * Get `numRelayers` relayers with locators from the contract. If < `numRelayers` in contract with locators,
+   * return all relayers from contract
    *
    * @param {number} numRelayers - The number of relayers to return.
-   * @param {Set<string>} addressesToIgnore - Any relayer addresses to skip over.
    * @param {Set<string>} allowedLocatorTypes - The locator types to include.
    *
    * @returns {Array<{locator: string, locatorType: string, burn: number, address: string}>} An array of
    * information objects corresponding to relayers
    */
-  async getRelayers(
-    numRelayers = 1,
-    addressesToIgnore = new Set([]),
-    allowedLocatorTypes = new Set(["ip", "tor"])
-  ) {
+  async getRelayers(numRelayers = 1, allowedLocatorTypes = new Set(["ip"])) {
     const contract = new ethers.Contract(
-      this.reputationAddress,
-      reputationABI,
+      this.registryAddress,
+      registryABI,
       this.provider
     );
 
-    const candidates = [];
+    const addresses = [];
 
-    const nextRelayerId = (await contract.nextRelayer()).toNumber();
+    const totalRelayers = (await contract.relayersCount(
+      LOCATOR_RELAYERS_TYPE
+    )).toNumber();
 
     // TODO: batch these calls with multicall
-    for (var relayerId = 1; relayerId < nextRelayerId; relayerId++) {
-      const relayerAddress = await contract.relayerList(relayerId);
-
-      if (!addressesToIgnore.has(relayerAddress)) {
-        candidates.push(relayerAddress);
-      }
+    for (var relayerId = 0; relayerId < totalRelayers; relayerId++) {
+      const relayerAddress = await contract.relayerByIdx(
+        LOCATOR_RELAYERS_TYPE,
+        relayerId
+      );
+      addresses.push(relayerAddress);
     }
 
-    // No registered relayers in the reputation contract!
-    if (candidates.length === 0) {
+    // No registered relayers in the registry contract!
+    if (addresses.length === 0) {
       return [];
     }
 
-    // TODO: batch these calls with multicall
-    const candidatesWithBurn = await Promise.all(
-      _.map(candidates, async candidate => {
-        const burn = await contract.relayerToBurn(candidate);
-        return { burn, address: candidate };
-      })
-    );
-
-    const sortedCandidates = _.sortBy(
-      candidatesWithBurn,
-      ({ burn }) => -1 * burn
-    );
-
-    // Iterate backwards through candidates until we hit 'numRelayers' of an allowed locator type
+    // Iterate backwards through addresses until we hit 'numRelayers' of an allowed locator type
     let toReturn = [];
-    for (const candidate of sortedCandidates) {
-      const { address, burn } = candidate;
+    for (const address of addresses) {
       const { locator, locatorType } = await contract.relayerToLocator(address);
 
       if (allowedLocatorTypes.has(locatorType)) {
-        toReturn.push({ locator, locatorType, address, burn });
+        toReturn.push({ locator, locatorType, address });
       }
 
       if (toReturn.length >= numRelayers) {
@@ -138,47 +124,6 @@ class SurrogethClient {
     }
 
     return resp.data["fee"];
-  }
-
-  /**
-   * Submit the specified transaction to the specified relayer, where the transaction may reward the relayer with ERC20 
-   * tokens (instead of ETH, which is what submitTx is for.
-   *
-   * @param {{locator: string, locatorType: string}} relayer - The relayer whose fee to return, as specified
-   * by a locator (i.e. IP address) and locatorType string (i.e. 'ip')
-   * @param {{to: string, data: string, value: number}} tx - The transaction info to submit. 'to' is a hex string
-   * representing the address to send to and 'data' is a hex string or an empty string representing the data
-   * payload of the transaction
-   *
-   * @returns {string|null} The transaction hash of the submitted transaction
-   */
-  async submitERC20Tx(tx, relayer) {
-    const { locator, locatorType } = relayer;
-    const { token, to, data, value } = tx;
-
-    if (locatorType !== "ip") {
-      console.log(
-        `Can't communicate with relayer at ${locator} of locatorType ${locatorType} because only IP supported right now.`
-      );
-      return null;
-    }
-
-    const resp = await axios.post(
-      `${this.protocol}://${getSubmitErc20TxRoute(locator)}`,
-      {
-        token,
-        to,
-        data,
-        value,
-        network: this.network
-      }
-    );
-
-    if (resp.status !== 200) {
-      console.log(`${resp.status} error submitting tx to relayer ${locator}`);
-    }
-
-    return resp.data.txHash;
   }
 
   /**
