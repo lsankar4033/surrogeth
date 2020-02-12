@@ -97,6 +97,13 @@ contract("Forwarder", accounts => {
           // TODO: exact testing here
           assert.isAbove(txGasCost, prevRelayerBalance - curRelayerBalance);
         });
+
+        it("logs fee", async () => {
+          let curIdx = await registryContract.curIdx();
+
+          let loggedFee = await registryContract.idxToFee(0);
+          assert.equal(loggedFee.toNumber(), applicationFee);
+        });
       });
     });
   });

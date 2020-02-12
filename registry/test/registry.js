@@ -60,24 +60,25 @@ contract("Registry", accounts => {
   describe("logRelay", () => {
     it("fails: can only log relays from forwarder address", async () => {
       await expectRevert(
-        registryContract.logRelay(accounts[3], {
+        registryContract.logRelay(accounts[3], 10, {
           from: accounts[1]
         }),
         "Registry: caller is not the forwarder"
       );
     });
 
-    it("logs the relay in relayerToRelayCount", async () => {
-      await registryContract.logRelay(accounts[3], { from: accounts[0] });
+    it("logs the relay and fee in relayerToFeeAgg", async () => {
+      await registryContract.logRelay(accounts[3], 100, { from: accounts[0] });
 
-      const relayCount = await registryContract.relayerToRelayCount(
+      let { feeSum, feeCount } = await registryContract.relayerToFeeAgg(
         accounts[3]
       );
-      assert.equal(relayCount.toNumber(), 1);
+      assert.equal(feeSum.toNumber(), 100);
+      assert.equal(feeCount.toNumber(), 1);
     });
 
-    it("adds the relayer to all list", async () => {
-      await registryContract.logRelay(accounts[3], { from: accounts[0] });
+    it("adds the relayer to all lists", async () => {
+      await registryContract.logRelay(accounts[3], 100, { from: accounts[0] });
 
       await checkRelayers(0, [accounts[3]]);
     });

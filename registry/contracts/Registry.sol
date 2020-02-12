@@ -3,7 +3,7 @@ pragma solidity ^0.5.10;
 contract Registry {
     address public forwarderAddress;
 
-    event RelayLogged(address indexed _relayer);
+    event RelayLogged(address indexed _relayer, uint256 _fee);
     event RelayerLocatorSet(address indexed _relayer);
 
     constructor(address _forwarderAddress) public {
@@ -19,8 +19,11 @@ contract Registry {
     }
     mapping(address => RelayerLocator) public relayerToLocator;
 
-    // TODO: add relayerToAvgFee?
-    mapping(address => uint256) public relayerToRelayCount;
+    struct FeeAgg {
+        uint256 feeSum;
+        uint256 feeCount;
+    }
+    mapping(address => FeeAgg) public relayerToFeeAgg;
 
     /**
      * Dynamic list of relayers. Client code is expected to use these lists to enumerate relayers or check for
@@ -121,11 +124,15 @@ contract Registry {
      *
      * @param _relayer The relayer whose reputation to update
      */
-    function logRelay(address _relayer) external onlyForwarder {
+    function logRelay(address _relayer, uint256 _fee) external onlyForwarder {
         _attemptAddRelayer(RelayersType.All, _relayer);
 
-        relayerToRelayCount[_relayer] += 1;
+        FeeAgg memory feeAgg = relayerToFeeAgg[_relayer];
+        relayerToFeeAgg[_relayer] = FeeAgg(
+            feeAgg.feeSum + _fee,
+            feeAgg.feeCount + 1
+        );
 
-        emit RelayLogged(_relayer);
+        emit RelayLogged(_relayer, _fee);
     }
 }
