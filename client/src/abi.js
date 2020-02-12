@@ -1,10 +1,9 @@
-const reputationABI = [
-  "function nextRelayer() view returns (uint256)",
-  "function relayerList(uint256) view returns (address)",
-  "function relayerToLocator(address) view returns (string locator, string locatorType)",
-  "function relayerToBurn(address) view returns (uint256)"
+const registryABI = [
+  "enum RelayersType { All, WithLocator }",
+  "function relayersCount(RelayersType _type)",
+  "function relayerByIdx(RelayersType _type, uint256 _idx)"
 ];
 
 module.exports = {
-  reputationABI
+  registryABI
 };

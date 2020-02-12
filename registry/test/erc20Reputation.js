@@ -1,15 +1,15 @@
 const { expectRevert } = require("openzeppelin-test-helpers");
 
-const ERC20RelayerReputation = artifacts.require("ERC20RelayerReputation");
+const ERC20Registry = artifacts.require("ERC20Registry");
 
-contract("ERC20RelayerReputation", accounts => {
+contract("ERC20Registry", accounts => {
   let reputationContract;
   let forwarder = accounts[0];
   let relayer = accounts[3];
   let erc20 = accounts[4];
 
   beforeEach(async () => {
-    reputationContract = await ERC20RelayerReputation.new(accounts[0]);
+    reputationContract = await ERC20Registry.new(accounts[0]);
   });
 
   it("has the proper initial state", async () => {
@@ -28,7 +28,7 @@ contract("ERC20RelayerReputation", accounts => {
         reputationContract.updateReputation(relayer, erc20, 100, {
           from: accounts[1]
         }),
-        "ERC20RelayerReputation: caller is not the forwarder"
+        "ERC20Registry: caller is not the forwarder"
       );
     });
 

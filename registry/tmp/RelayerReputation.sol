@@ -1,4 +1,7 @@
-pragma solidity ^0.5.10;
+
+// File: contracts/RelayerReputation.sol
+
+pragma solidity 0.5.10;
 
 contract RelayerReputation {
     event RelayerAdded(address indexed _relayer);

@@ -4,3 +4,8 @@ node_modules/
 watch_config.json
 
 .secret
+
+.eslintrc.js
+.jshintrc
+
+*.bak

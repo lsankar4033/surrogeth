@@ -1,6 +1,7 @@
 pragma solidity ^0.5.10;
 
-contract ERC20RelayerReputation {
+// TODO: update and remove burn
+contract ERC20Registry {
     event RelayerAdded(address indexed _relayer);
     event RelayerTokenPairAdded(address indexed _relayer, address _erc20);
 
@@ -56,7 +57,7 @@ contract ERC20RelayerReputation {
      * Throws if called by any account other than the forwarder.
      */
     modifier onlyForwarder() {
-        require(msg.sender == forwarderAddress, "ERC20RelayerReputation: caller is not the forwarder");
+        require(msg.sender == forwarderAddress, "ERC20Registry: caller is not the forwarder");
         _;
     }
 
@@ -86,7 +87,7 @@ contract ERC20RelayerReputation {
      * @param _locatorType The locator type to use
      */
     function setRelayerLocator(address _relayer, string calldata _locator, string calldata _locatorType) external {
-        require(_relayer == msg.sender, "ERC20RelayerReputation: can only set the locator for self");
+        require(_relayer == msg.sender, "ERC20Registry: can only set the locator for self");
 
         relayerToLocator[_relayer] = RelayerLocator(
             _locator,
