@@ -2,12 +2,12 @@ const { SurrogethClient } = require("./client");
 
 jest.mock("ethers");
 
-describe("getRelayers", () => {
+describe("getBroadcasters", () => {
   test("returns an empty list if no candidates in contract", async () => {
     require("ethers").__setRelayers([], {});
 
     const client = new SurrogethClient();
-    const relayers = await client.getRelayers();
+    const relayers = await client.getBroadcasters();
 
     expect(relayers).toStrictEqual([]);
   });
@@ -17,7 +17,7 @@ describe("getRelayers", () => {
 
     const client = new SurrogethClient();
 
-    let relayers = await client.getRelayers(1, new Set(["tor"]));
+    let relayers = await client.getBroadcasters(1, new Set(["tor"]));
     expect(relayers).toStrictEqual([
       {
         address: 3,
@@ -32,7 +32,7 @@ describe("getRelayers", () => {
 
     const client = new SurrogethClient();
 
-    let relayers = await client.getRelayers(1, new Set(["tor"]));
+    let relayers = await client.getBroadcasters(1, new Set(["tor"]));
     expect(relayers).toStrictEqual([]);
   });
 
@@ -41,7 +41,7 @@ describe("getRelayers", () => {
 
     const client = new SurrogethClient();
 
-    let relayers = await client.getRelayers(2, new Set(["tor", "ip"]));
+    let relayers = await client.getBroadcasters(2, new Set(["tor", "ip"]));
     expect(relayers).toStrictEqual([
       {
         address: 1,

@@ -53,7 +53,10 @@ class SurrogethClient {
    * @returns {Array<{locator: string, locatorType: string, burn: number, address: string}>} An array of
    * information objects corresponding to relayers
    */
-  async getRelayers(numRelayers = 1, allowedLocatorTypes = new Set(["ip"])) {
+  async getBroadcasters(
+    numRelayers = 1,
+    allowedLocatorTypes = new Set(["ip"])
+  ) {
     const contract = new ethers.Contract(
       this.registryAddress,
       registryABI,
