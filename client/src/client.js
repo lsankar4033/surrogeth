@@ -122,13 +122,14 @@ class SurrogethClient {
     let totalFeeCount = 0;
     for (var relayerId = 0; relayerId < totalRelayers; relayerId++) {
       const relayerAddress = await contract.relayerByIdx(
-        LOCATOR_RELAYERS_TYPE,
+        ALL_RELAYERS_TYPE,
         relayerId
       );
 
       const { feeSum, feeCount } = await contract.relayerToFeeAgg(
         relayerAddress
       );
+      console.log(`Fees: ${feeSum}, Count: ${feeCount}`);
       totalFeeSum += feeSum.toNumber();
       totalFeeCount += feeCount.toNumber();
     }
