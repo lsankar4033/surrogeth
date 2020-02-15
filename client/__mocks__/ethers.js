@@ -1,17 +1,32 @@
 const ethers = jest.genMockFromModule("ethers");
 
-// Allows tests to set the relayers found in the mocked out registry contract
+// Allows tests to set the broadcasters found in the mocked out registry contract
+let broadcasters = [];
+let broadcasterToLocator = {};
+function __setBroadcasters(_broadcasters, _locatorTypes) {
+  broadcasters = _broadcasters;
+
+  broadcasterToLocator = {};
+  for (const i in broadcasters) {
+    const broadcaster = broadcasters[i];
+    broadcasterToLocator[broadcaster] = {
+      locator: String(broadcaster),
+      locatorType: _locatorTypes[i]
+    };
+  }
+}
+
 let relayers = [];
-let relayerToLocator = {};
-function __setRelayers(_relayers, _locatorTypes) {
+let relayerToFeeAgg = {};
+function __setRelayers(_relayers, _feeAggs) {
   relayers = _relayers;
 
-  relayerToLocator = {};
+  relayerToFeeAgg = {};
   for (const i in relayers) {
     const relayer = relayers[i];
-    relayerToLocator[relayer] = {
-      locator: String(relayer),
-      locatorType: _locatorTypes[i]
+    relayerToFeeAgg[relayer] = {
+      feeSum: { toNumber: () => _feeAggs[i][0] },
+      feeCount: { toNumber: () => _feeAggs[i][1] }
     };
   }
 }
@@ -22,26 +37,33 @@ class Contract {
   async relayersCount(type) {
     if (type == 1) {
       return {
-        toNumber: () => relayers.length
+        toNumber: () => broadcasters.length
       };
     } else {
-      return 0;
+      return {
+        toNumber: () => relayers.length
+      };
     }
   }
 
   async relayerByIdx(type, idx) {
     if (type == 1) {
-      return relayers[idx];
+      return broadcasters[idx];
     } else {
-      return {};
+      return relayers[idx];
     }
   }
 
   async relayerToLocator(address) {
-    return relayerToLocator[address];
+    return broadcasterToLocator[address];
+  }
+
+  async relayerToFeeAgg(address) {
+    return relayerToFeeAgg[address];
   }
 }
 
+ethers.__setBroadcasters = __setBroadcasters;
 ethers.__setRelayers = __setRelayers;
 ethers.Contract = Contract;
 

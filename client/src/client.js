@@ -11,6 +11,7 @@ const DEFAULT_REGISTRY_ADDRESS = {};
 const DEFAULT_RELAYER_BATCH_SIZE = 10;
 
 // As defined in the Registry.sol contract
+const ALL_RELAYERS_TYPE = 0;
 const LOCATOR_RELAYERS_TYPE = 1;
 
 const getFeeRoute = locator => {
@@ -52,7 +53,10 @@ class SurrogethClient {
    * @returns {Array<{locator: string, locatorType: string, burn: number, address: string}>} An array of
    * information objects corresponding to relayers
    */
-  async getRelayers(numRelayers = 1, allowedLocatorTypes = new Set(["ip"])) {
+  async getBroadcasters(
+    numRelayers = 1,
+    allowedLocatorTypes = new Set(["ip"])
+  ) {
     const contract = new ethers.Contract(
       this.registryAddress,
       registryABI,
@@ -97,33 +101,44 @@ class SurrogethClient {
   }
 
   /**
-   * Returns the fee for the specified relayer.
+   * Returns the avg fee seen in the fee registry. This is one heuristic a client could use to determine the
+   * fee to broadcast on its tx.
    *
-   * @param {{locator: string, locatorType: string}} relayer - The relayer whose fee to return, as specified
-   * by a locator (i.e. IP address) and locatorType string (i.e. 'ip')
-   *
-   * @returns {number|null} The fee in Wei advertised by the specified relayer.
+   * @returns {number|null} The average fee in Wei taken by a relayer in the registry
    */
-  async getRelayerFee(relayer) {
-    const { locator, locatorType } = relayer;
+  async getAvgFee() {
+    const contract = new ethers.Contract(
+      this.registryAddress,
+      registryABI,
+      this.provider
+    );
 
-    if (locatorType !== "ip") {
-      console.log(
-        `Can't communicate with relayer at ${locator} of locatorType ${locatorType} because only IP supported right now.`
+    const totalRelayers = (await contract.relayersCount(
+      ALL_RELAYERS_TYPE
+    )).toNumber();
+
+    // TODO: batch these calls with multicall
+    let totalFeeSum = 0;
+    let totalFeeCount = 0;
+    for (var relayerId = 0; relayerId < totalRelayers; relayerId++) {
+      const relayerAddress = await contract.relayerByIdx(
+        ALL_RELAYERS_TYPE,
+        relayerId
       );
-      return null;
+
+      const { feeSum, feeCount } = await contract.relayerToFeeAgg(
+        relayerAddress
+      );
+      console.log(`Fees: ${feeSum}, Count: ${feeCount}`);
+      totalFeeSum += feeSum.toNumber();
+      totalFeeCount += feeCount.toNumber();
     }
 
-    const resp = await axios.get(`${this.protocol}://${getFeeRoute(locator)}`);
-
-    if (resp.statusCode !== 200) {
-      console.log(
-        `${resp.status} error retrieving fee from relayer ${locator}`
-      );
+    if (totalFeeCount == 0) {
       return null;
+    } else {
+      return totalFeeSum / totalFeeCount;
     }
-
-    return resp.data["fee"];
   }
 
   /**
