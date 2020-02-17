@@ -4,7 +4,7 @@ Surrogeth is a general [meta-transaction](https://medium.com/@austin_48503/ether
 that uses frontrunners as relayers network. It's designed to support any case where an Ethereum dapp's users
 shouldn't be paying the gas costs for their transactions.
 
-It was originally built to support [MicroMix](https://micromix.app), but we're hoping it can support other applications in the future!
+It was originally built to support [MicroMix](https://micromix.app), but we're working to generalize it into a drop-in utility for any smart contract.
 
 ## Contents
 
