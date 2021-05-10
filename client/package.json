@@ -16,7 +16,7 @@
   "dependencies": {
     "axios": "0.19.0",
     "ethers": "4.0.37",
-    "lodash": "4.17.15"
+    "lodash": "4.17.21"
   },
   "devDependencies": {
     "husky": "3.0.4",
